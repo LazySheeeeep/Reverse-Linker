@@ -69,7 +69,7 @@ class InputWindow:
         self.top.title("Input Window")
         self.top.resizable(True, True)
         self.height = 200
-        self.width = 440
+        self.width = 900
         x = (self.top.winfo_screenwidth() - self.width) // 2
         y = (self.top.winfo_screenheight() - self.height) // 2
         self.top.geometry(f"{self.width}x{self.height}+{x}+{y}")
@@ -100,22 +100,22 @@ class InputWindow:
 
         # 按钮
         self.back_button = tk.Button(self.top, text="<", command=self.back)
-        self.back_button.grid(row=6, column=0, padx=3, pady=1, sticky=tk.W)
+        self.back_button.grid(row=7, column=0, padx=3, pady=1, sticky=tk.W)
         self.undo_button = tk.Button(self.top, text="undo", command=self.undo)
-        self.undo_button.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+        self.undo_button.grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
         self.confirm_button = tk.Button(self.top, text="commit", command=lambda: sh.exec_i("commit;"))
         self.confirm_button.grid(row=1, column=3, padx=5, pady=5, sticky=tk.W)
 
         # 消息输出框
-        self.output_text = tk.Text(self.top, height=5, state=tk.DISABLED)
-        self.output_text.grid(row=3, column=0, columnspan=4, rowspan=3, sticky=tk.NSEW)
+        self.output_text = tk.Text(self.top, height=10, state=tk.DISABLED)
+        self.output_text.grid(row=3, column=0, columnspan=4, rowspan=4, sticky=tk.NSEW)
         self.output("This is an output window.")
         # 设置列宽行高
         for i in range(4):
             self.top.grid_columnconfigure(i, minsize=5, weight=1)
-        for i in range(6):
+        for i in range(7):
             self.top.grid_rowconfigure(i, minsize=5, weight=2)
-        self.top.grid_rowconfigure(6, minsize=3, weight=1)
+        self.top.grid_rowconfigure(7, minsize=3, weight=1)
 
         # note输入框
         self.note_label = tk.Label(self.top, state=tk.DISABLED, text="Note:")
@@ -150,8 +150,8 @@ class InputWindow:
         self.master.after(2, lambda: self.main_entry.focus())
 
     def show_note_entry(self, event=None):
-        self.note_label.grid(row=6, column=1, padx=5, pady=3, sticky=tk.E)
-        self.note_entry.grid(row=6, column=2, columnspan=2, sticky=tk.EW)
+        self.note_label.grid(row=7, column=1, padx=5, pady=3, sticky=tk.E)
+        self.note_entry.grid(row=7, column=2, columnspan=2, sticky=tk.EW)
 
     def invisible_note_entry(self, event=None):
         self.note_label.grid_forget()
@@ -204,23 +204,23 @@ class InputWindow:
             if note_text:
                 self.output(f"\tNote:{note_text}")
                 # 已在库中，更新计划，返回消息
-                if primary_query_result:
-                    row_count = sh.exec_i(
-                        f"update `revise_items` set `mastery_level` = 1 where `revise_id` in (\
-                        select `refresh_id` from `phrases` where `phrase` = '{text}');")
-                    if row_count != 0:
-                        self.output("\t已存在库中，计划已更新;")
-                    else:
-                        self.output("\t已存在库中，但貌似没更新？")
-                # 不在库中，先弹窗问词组复习形式，再查询结果，结果入库
+            if primary_query_result:
+                row_count = sh.exec_i(
+                    f"update `revise_items` set `mastery_level` = 1 where `revise_id` in (\
+                    select `refresh_id` from `phrases` where `phrase` = '{text}');")
+                if row_count != 0:
+                    self.output("\t已存在库中，计划已更新;")
                 else:
-                    phrase_option_window = PhraseOptionWindow(self.master, "Independent", "Related to")
-                    related_word = phrase_option_window.outcome()
-                    if related_word == '':  # 选择独立
-                        sh.phrase_process(text, self.output, note_text)
-                    else:
-                        self.output('\tassociate with:' + related_word)
-                        sh.phrase_process(text, self.output, note_text, related_word)
+                    self.output("\t已存在库中，但貌似没更新？")
+            # 不在库中，先弹窗问词组复习形式，再查询结果，结果入库
+            else:
+                phrase_option_window = PhraseOptionWindow(self.master, "Independent", "Related to")
+                related_word = phrase_option_window.outcome()
+                if related_word == '':  # 选择独立
+                    sh.phrase_process(text, self.output, note_text)
+                else:
+                    self.output('\tassociate with:' + related_word)
+                    sh.phrase_process(text, self.output, note_text, related_word)
         # 单词加入，提取note，再看是否已经有计划
         else:
             note_text = None
