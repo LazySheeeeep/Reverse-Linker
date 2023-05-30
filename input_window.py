@@ -196,6 +196,7 @@ class ImportFileWindow:
     def __init__(self, master):
         self.master = master
         self.top = tk.Toplevel(master, alpha=0.9)
+        self.top.title("选择单词文件导入数据库，文件内一行一个单词，不支持词组")
         self.file_select_btn = tk.Button(self.top, text="选择文件", command=self.open_file)
         self.file_select_btn.grid(row=0, column=0, padx=10, pady=10)
         self.top.protocol("WM_DELETE_WINDOW", lambda: self.close())
