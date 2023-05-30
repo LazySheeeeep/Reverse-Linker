@@ -126,7 +126,7 @@ def phrase_process(phrase: str, output: Callable[[str], None], note: str = None,
     if related_word is None:
         cnt = exec_i(f"insert into `phrases` values('{phrase}', null, '{revise_id}');")
     else:
-        cnt = exec_i(f"insert into `phrases` values('{phrase}', '{related_word}', );")
+        cnt = exec_i(f"insert into `phrases` values('{phrase}', '{related_word}', '{revise_id}');")
     output(f"\tphrases：{cnt}")
     insert_translations(phrase, rigid_translations, output)
     if note:
@@ -148,16 +148,16 @@ def word_renew_plan(word: str, op: int, output: Callable[[str], None], note: str
     output("\n")
     if op == 1 or op == 3:
         if note:
-            cnt += fetchone(f"call `renew_refresh_plan_for_word`('{word}', '{note}');")
+            cnt += exec_i(f"call `renew_refresh_plan_for_word`('{word}', '{note}');")
         else:
-            cnt += fetchone(f"call `renew_refresh_plan_for_word`('{word}', null);")
+            cnt += exec_i(f"call `renew_refresh_plan_for_word`('{word}', null);")
         if output_mode == 1:
             output("refresh renewed ")
     if op == 2 or op == 3:
         if alias:
-            cnt += fetchone(f"call `renew_respell_plan_for_word`('{word}', '{alias}');")
+            cnt += exec_i(f"call `renew_respell_plan_for_word`('{word}', '{alias}');")
         else:
-            cnt += fetchone(f"call `renew_respell_plan_for_word`('{word}', null);")
+            cnt += exec_i(f"call `renew_respell_plan_for_word`('{word}', null);")
         if output_mode == 1:
             output("respell renewed ")
     if output_mode == 1:
@@ -170,7 +170,7 @@ def word_join_plan(word: str, op: int, output: Callable[[str], None], phonetic: 
                    output_mode=1):
     # 新增复习计划
     if op == 3:
-        isrt_rev_cmd = """insert into `revise_items` values ();"""
+        isrt_rev_cmd = """insert into `revise_items` values (),();"""
     else:
         if next_revise_date and mastery:
             isrt_rev_cmd = f"""insert into `revise_items`(`next_revise_date`, `mastery_level`) values 
@@ -238,7 +238,7 @@ def import_from_file(filename, output: Callable[[str], None], date, mastery='1')
         for line in f.readlines():
             if line.startswith("#"):
                 continue
-            word = line.rsplit(']', 1)[-1].strip()
+            word = line.strip()
             exist_result = fetchone(f"select * from words where spelling = '{word}';")
             # 已有，更新计划，输出消息
             if exist_result:
