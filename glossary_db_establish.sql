@@ -180,20 +180,23 @@ begin
     end if;
 end$$
 
--- 更新掌握程度时自动计算下次复习日期
+-- 当更新掌握程度时，自动计算下次复习日期
 -- 由于触发器不能删除正在更新的表，所以需要删除（掌握程度已满）时先给掌握程度设置为空，之后再手动选择掌握程度为空的删除
 drop trigger if exists `set_date_before_update_item`$$
 create trigger `set_date_before_update_item`
 before update on `revise_items`
 for each row
 begin
-	if new.`mastery_level` >= 5 then
-		set new.`mastery_level` = null;
-	else begin
-		declare `_interval_` tinyint;
-		select `next_interval` into `_interval_` from `intervals` where `mastery_level` = new.`mastery_level`;
-		set new.`next_revise_date` = date_add(curdate(), interval `_interval_` day);
-	end;
+	-- 仅当更新掌握程度时
+	if new.`mastery_level` <> old.`mastery_level` then
+		if new.`mastery_level` >= 5 then
+			set new.`mastery_level` = null;
+		else begin
+			declare `_interval_` tinyint;
+			select `next_interval` into `_interval_` from `intervals` where `mastery_level` = new.`mastery_level`;
+			set new.`next_revise_date` = date_add(curdate(), interval `_interval_` day);
+		end;
+		end if;
 	end if;
 end$$
 
