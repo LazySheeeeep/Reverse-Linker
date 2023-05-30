@@ -9,17 +9,13 @@ class RespellWindow:
         self.master = master
         self.top = tk.Toplevel(master)
         self.top.title("Respell Window")
-        self.top.geometry("400x300")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
 
-        self.word_list = self.get_respell_list()
+        # self.word_list = self.get_respell_list()
         self.current_index = 0
 
-        self.prompt_label = tk.Label(self.top, text="")
-        self.prompt_label.pack(pady=10)
-
-        self.translation_label = tk.Label(self.top, text="")
-        self.translation_label.pack(pady=10)
+        self.output_text = tk.Text(self.top, height=10, state=tk.DISABLED)
+        self.output_text.pack(padx=50, pady=50)
 
         self.entry = tk.Entry(self.top, width=30)
         self.entry.pack(pady=10)
@@ -33,7 +29,13 @@ class RespellWindow:
         self.recall_button = tk.Button(self.top, text="Recall", width=10, command=self.recall_word)
         self.recall_button.pack(pady=10)
 
-        self.show_next_word()
+        #self.show_next_word()
+
+    def output(self, msg: str):
+        self.output_text.config(state=tk.NORMAL)
+        self.output_text.insert(tk.END, msg)
+        self.output_text.see(tk.END)
+        self.output_text.config(state=tk.DISABLED)
 
     def get_respell_list(self):
         respell_list = sh.fetchall("SELECT * FROM revise_list_today WHERE type='respell'")
