@@ -32,22 +32,18 @@ class DictationWindow:
         # 选项
         self.option_var = tk.IntVar()
         self.option_var.set(0)  # 默认选中第一个选项
-        self.option_button = []
         for i in range(4):
-            self.option_button.append(tk.Radiobutton(self.top, text=options_name[i], variable=self.option_var, value=i))
-            self.option_button[i].grid(row=2, column=i, padx=5, pady=5, sticky=tk.W + tk.E)
+            btn = tk.Radiobutton(self.top, text=options_name[i], variable=self.option_var, value=i)
+            btn.grid(row=2, column=i, padx=5, pady=5, sticky=tk.W + tk.E)
             if i % 2:  # review , both
-                self.option_button[i].config(command=self.show_note_entry)
+                btn.config(command=self.show_note_entry)
             else:
-                self.option_button[i].config(command=self.invisible_note_entry)
+                btn.config(command=self.invisible_note_entry)
 
         # 按钮
-        self.back_button = tk.Button(self.top, text="<", command=self.back)
-        self.back_button.grid(row=7, column=0, padx=3, pady=1, sticky=tk.W)
-        self.undo_button = tk.Button(self.top, text="undo", command=self.undo)
-        self.undo_button.grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
-        self.confirm_button = tk.Button(self.top, text="commit", command=lambda: sh.exec_i("commit;"))
-        self.confirm_button.grid(row=1, column=3, padx=5, pady=5, sticky=tk.W)
+        tk.Button(self.top, text="<", command=self.back).grid(row=7, column=0, padx=3, pady=1, sticky=tk.W)
+        tk.Button(self.top, text="undo", command=self.undo).grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
+        tk.Button(self.top, text="commit", command=self.commit).grid(row=1, column=3, padx=5, pady=5, sticky=tk.W)
 
         # 消息输出框
         self.output_text = tk.Text(self.top, height=10, state=tk.DISABLED)
@@ -73,6 +69,10 @@ class DictationWindow:
 
     def undo(self):
         self.output(f"\nundo affects {sh.exec_i('rollback;')}row(s)")
+
+    def commit(self):
+        sh.exec_i("commit;")
+        self.output("committed")
 
     def up_handler(self, event=None):
         self.main_entry.delete(0, tk.END)
