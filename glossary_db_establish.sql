@@ -47,7 +47,7 @@ drop table if exists `words`;
 create table `words`(
 	`spelling` varchar(25) primary key,
     `alias` varchar(25) default null,
-    `phonetic` varchar(40) default null,
+    `phonetic` varchar(60) default null,
     `refresh_id` int null default null,
     `respell_id` int null default null,
     foreign key(`refresh_id`) references `revise_items`(`revise_id`) on delete set null,
@@ -90,7 +90,7 @@ create table `phrases`(
 drop table if exists `word_ids`;
 create table `word_ids`(
 	`spelling` varchar(25) not null,
-    `meaning_id` int primary key,
+    `meaning_id` int,
     foreign key(`spelling`) references `words` (`spelling`) on delete cascade,
     foreign key(`meaning_id`) references `meanings`(`meaning_id`) on delete cascade
 );
@@ -98,7 +98,7 @@ create table `word_ids`(
 drop table if exists `an_synonyms`;
 create table `an_synonyms`(
 	`meaning_id` int not null,
-    `word` varchar(25) not null,
+    `word` varchar(40) not null,
     `is_synonym` boolean default true,
     foreign key(`meaning_id`) references `meanings`(`meaning_id`) on delete cascade
 );
@@ -125,7 +125,7 @@ select `revise_id`, `phrase`, `mastery_level`, `next_revise_date`, 'refresh phra
 from `revise_items`
 join `phrases` on `refresh_id` = `revise_id`
 union
-select `revise_id`, `words`.`spelling`, `next_revise_date`, `mastery_level`, 'respell'
+select `revise_id`, `words`.`spelling`, `mastery_level`, `next_revise_date`, 'respell'
 from `revise_items`
 join `words` on `respell_id` = `revise_id`;
 
@@ -153,6 +153,15 @@ create view `revise_list_today` as
 select * from `revise_list_all`
 where `next_revise_date` >= curdate();
 
+-- (提供给触发器删除逻辑使用)多词意义表
+drop view if exists `shared_meaning_ids`;
+create view `shared_meaning_ids` as
+select `meaning_id`, COUNT(`spelling`) as `word_count`, `meaning`
+from `word_ids`
+join `meanings` using(`meaning_id`)
+group by `meaning_id`
+having count(*) <> 1;
+
 -- 触发器 与 过程
 delimiter $$
 
@@ -161,11 +170,14 @@ delimiter $$
 drop trigger if exists `set_date_before_insert_item`$$
 create trigger `set_date_before_insert_item`
 before insert on `revise_items`
-for each row 
+for each row
 begin
-	declare `_interval_` tinyint;
-	select `next_interval` into `_interval_` from `intervals` where `mastery_level` = new.`mastery_level`;
-	set new.`next_revise_date` = date_add(curdate(), interval `_interval_` day);
+	if new.`next_revise_date` is null then begin
+		declare `_interval_` tinyint;
+		select `next_interval` into `_interval_` from `intervals` where `mastery_level` = new.`mastery_level`;
+		set new.`next_revise_date` = date_add(curdate(), interval `_interval_` day);
+		end;
+    end if;
 end$$
 
 -- 更新掌握程度时自动计算下次复习日期
@@ -186,7 +198,7 @@ begin
 end$$
 
 -- 当复习计划完成时，复习单元删除后需要清理相关表项
--- 仅当单词同时没有复现和重拼的计划时才触发删除; 短语将直接被cascade删除无需手动删; 
+-- 仅当单词同时没有复现和重拼的计划时才触发删除; 短语将直接被cascade删除无需手动删;
 drop trigger if exists `delete_words_after_delete_plan`$$
 create trigger `delete_words_after_delete_plan`
 after delete on `revise_items`
@@ -195,14 +207,17 @@ begin
 	delete from `words` where `refresh_id` is null and `respell_id` is null;
 end$$
 
--- 单词删除之前，趁词义id表还在，删去所有对应的单词英文释义，除非该单词释义加入复习计划（同义词）, 没问题
+-- 单词删除之前，趁词义id表还在，删去所有对应的单词英文释义且注意不能删去同义词的共同意义
+-- 所以只有当一个意思仅对应一个单词的时候，而且该单词需要删去的时候，它的意思才会被删去
+-- 并且该单词释义加入复习计划（同义词）后也不能删去
 drop trigger if exists `delete_meanings_on_word_delete`$$
 create trigger `delete_meanings_on_word_delete`
 before delete on `words`
 for each row
 begin
-    delete from `meanings` as m where m.`meaning_id` in
-    (select wi.`meaning_id` from `word_ids` as wi where wi.`spelling` = old.`spelling`)
+    delete from `meanings` as m where
+    m.`meaning_id` in (select wi.`meaning_id` from `word_ids` as wi where wi.`spelling` = old.`spelling`)
+    and m.`meaning_id` not in (select `meaning_id` from `shared_meaning_ids`)
     and m.`refresh_id` is null;
 end$$
 

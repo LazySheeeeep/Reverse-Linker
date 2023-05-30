@@ -1,81 +1,24 @@
-import tkinter as tk
+import ttkbootstrap as tk
+from ttkbootstrap.constants import *
+from tkinter.filedialog import askopenfilename
+from ttkbootstrap.dialogs import Querybox
 from util import sqlhelper as sh
 from util import consultant as ct
+import threading
 
 options_name = ["pass", "review", "respell", "both"]
 
 
-class PhraseOptionWindow:
-    def __init__(self, master: tk.Tk, first_op_name, second_op_name):
+class DictationWindow:
+    def __init__(self, master):
         self.master = master
-        self.top = tk.Toplevel(self.master)
-        window_width = 200
-        window_height = 150
-        screen_width = self.top.winfo_screenwidth()
-        screen_height = self.top.winfo_screenheight()
-        x = int((screen_width - window_width) / 2)
-        y = int((screen_height - window_height) / 2)
-        self.top.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        title_label = tk.Label(self.top, text='Please choose an option', justify=tk.CENTER)
-        title_label.grid(row=0, column=0, pady=5)
-        self.option_var = tk.IntVar()
-        self.option_var.set(0)  # 默认选中第一个选项
-        self.button1 = tk.Radiobutton(self.top, text=first_op_name, variable=self.option_var, value=0,
-                                      command=self.on_first_handler)
-        self.button1.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W + tk.E)
-        self.button2 = tk.Radiobutton(self.top, text=second_op_name, variable=self.option_var, value=1,
-                                      command=self.on_second_handler)
-        self.button2.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W + tk.E)
-        self.entry = tk.Entry(self.top, justify=tk.CENTER, width=20)
-        self.top.bind("<Tab>", self.change_option)  # 绑定Tab键
-        self.top.bind("<Return>", self.close_window)  # 绑定Enter键
-
-        self.button1.focus_set()  # 将焦点设置在第一个选项上
-        self.button1.select()  # 默认选中第一个选项
-
-        self.associate_word = ''
-
-    def change_option(self, event=None):
-        # 按一次就换一个选项；
-        if self.option_var.get() == 0:
-            self.on_second_handler()
-        else:
-            self.on_first_handler()
-
-    def on_first_handler(self):
-        self.option_var.set(0)
-        self.entry.grid_forget()
-
-    def on_second_handler(self, event=None):
-        self.option_var.set(1)
-        self.entry.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W + tk.E)
-        self.entry.focus_set()
-
-    def close_window(self, event=None):
-        if self.option_var.get() == 1:
-            self.associate_word = self.entry.get()
-            self.entry.delete(0, tk.END)
-        self.top.destroy()
-
-    def outcome(self):
-        self.top.wait_window()
-        return self.associate_word
-
-
-class InputWindow:
-    def __init__(self, master: tk.Tk):
-        self.master = master
-        self.top = tk.Toplevel(self.master)
+        self.top = tk.Toplevel(self.master, alpha=0.85, background='grey')
         self.top.title("Input Window")
         self.top.resizable(True, True)
-        self.height = 200
-        self.width = 900
-        x = (self.top.winfo_screenwidth() - self.width) // 2
-        y = (self.top.winfo_screenheight() - self.height) // 2
-        self.top.geometry(f"{self.width}x{self.height}+{x}+{y}")
+        self.top.place_window_center()
 
         # 输入框及选项
-        self.main_label = tk.Label(self.top, text="Please type a word:")
+        self.main_label = tk.Label(self.top, justify=tk.CENTER, text="Please type a word:", anchor="center")
         self.main_label.grid(row=0, column=0, columnspan=4, padx=40, pady=5, sticky=tk.W + tk.E)
         self.main_entry = tk.Entry(self.top, justify=tk.CENTER, width=20)
         self.main_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky=tk.W + tk.E)
@@ -168,7 +111,7 @@ class InputWindow:
                  not char > u'\u3000' or char in [' ', '-', '|']
                  for char in text) and \
                 len(text) < 40:
-            self.output(f"\n{options_name[option_num]}:{text}")
+            self.output(f"\n{options_name[option_num]}:{text}")  # todo: another panel output
         else:
             self.output(f'\nInvalid Input.{text}')
             self.main_label.config(text="Please try again")
@@ -185,9 +128,12 @@ class InputWindow:
             alias = None
         self.last_submit = text
         # 合法性检测结束，查看是否在库中
-        primary_query_result = sh.fetchone(f"select `translation` from `translations` where `origin`='{text}';")
+        primary_query_result = sh.fetchall(f"select `translation` from `translations` where `origin`='{text}';")
         if primary_query_result:
-            self.main_label.config(text=str(primary_query_result))
+            prompt = ''
+            for trans in primary_query_result:
+                prompt += trans[0] + '|'
+            self.main_label.config(text=prompt)
         else:
             translation = ct.primary_test(text, self.output)
             if translation:
@@ -214,35 +160,82 @@ class InputWindow:
                     self.output("\t已存在库中，但貌似没更新？")
             # 不在库中，先弹窗问词组复习形式，再查询结果，结果入库
             else:
-                phrase_option_window = PhraseOptionWindow(self.master, "Independent", "Related to")
-                related_word = phrase_option_window.outcome()
+                related_word = Querybox.get_string(
+                    prompt="related word:\n(or blank indicate independent)",
+                    title="Phrase Option",
+                    parent=self.top
+                )
                 if related_word == '':  # 选择独立
+                    self.output('\t|independent')
                     sh.phrase_process(text, self.output, note_text)
                 else:
-                    self.output('\tassociate with:' + related_word)
+                    self.output('\t|related to:' + related_word)
                     sh.phrase_process(text, self.output, note_text, related_word)
         # 单词加入，提取note，再看是否已经有计划
         else:
             note_text = None
             if option_num != 2:
-                self.note_entry.get()
-                self.note_entry.delete(0, tk.END)
-            if note_text:
-                self.output(f"\tNote:{note_text}")
-            # 检测是否已有refresh计划
-            exist_result = sh.fetchone(f"select * from words where spelling = '{text}';")
-            # 已有，更新计划，输出消息
-            if exist_result:
-                cnt = sh.word_renew(text, option_num, note_text, alias)
-                self.output('\n计划更新√' + cnt)
-            # 查询结果，结果入库
-            else:
-                sh.word_process(text, option_num, self.output, note_text, alias)
-                self.output('\n计划加入√')
+                note_text = self.note_entry.get()
+                if note_text:
+                    self.note_entry.delete(0, tk.END)
+                    self.output(f"\tNote:{note_text}")
+            sh.commit_and_start()
+            self.output("\ncommit and start")
+            threading.Thread(target=lambda:
+            sh.word_process(word=text, op=option_num, output=self.output, note=note_text, alias=alias)).start()
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = tk.Window()
     root.withdraw()
-    InputWindow(root)
+    DictationWindow(root)
     root.mainloop()
+
+
+class ImportFileWindow:
+    def __init__(self, master):
+        self.master = master
+        self.top = tk.Toplevel(master, alpha=0.9)
+        self.file_select_btn = tk.Button(self.top, text="选择文件", command=self.open_file)
+        self.file_select_btn.grid(row=0, column=0, padx=10, pady=10)
+        self.top.protocol("WM_DELETE_WINDOW", lambda: self.close())
+        self.date_entry = tk.DateEntry(self.top, bootstyle="success", dateformat=r"%Y-%m-%d")
+        self.date_entry.grid(row=0, column=1, padx=5, pady=10)
+
+        tk.Button(self.top, text="submit", bootstyle=(PRIMARY, "outline-toolbutton"), command=self.submit) \
+            .grid(row=0, column=2, padx=10, pady=10)
+        self.commit_btn = tk.Button(self.top, text="commit", state=DISABLED, command=sh.db.commit)
+        self.commit_btn.grid(row=0, column=3, padx=10, pady=10)
+
+        self.output_text = tk.Text(self.top, height=40, width=100)
+        self.output_text.grid(row=1, column=0, columnspan=4, padx=120, pady=30)
+        self.output("This is output panel")
+
+    def open_file(self):
+        self.path = askopenfilename()
+        self.file_select_btn.config(text=self.path)
+        self.output(f"\n选择文件路径为：{self.path}")
+
+    def submit(self):
+        if self.path is None or self.path == '':
+            self.output("\n文件不能为空")
+            return
+        mastery = Querybox.get_integer(parent=self.top, title="掌握程度",minvalue=0, maxvalue=4)
+        date = self.date_entry.entry.get()
+        self.output(f"\npath:{self.path},date:{date},mastery:{mastery}")
+        sh.commit_and_start()
+        self.output("\ncommit and start")
+        threading.Thread(target=lambda :
+        sh.import_from_file(self.path, self.output, date, str(mastery))).start()
+        self.commit_btn.config(state=ACTIVE)
+
+    def close(self):
+        self.top.withdraw()
+        self.master.deiconify()
+
+
+    def output(self, msg: str):
+        self.output_text.config(state=tk.NORMAL)
+        self.output_text.insert(tk.END, msg)
+        self.output_text.see(tk.END)
+        self.output_text.config(state=tk.DISABLED)

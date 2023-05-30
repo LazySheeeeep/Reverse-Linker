@@ -2,54 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from util import sqlhelper as sh
 
-class ReviseWindow:
-    def __init__(self, master):
-        self.master = master
-        self.top = tk.Toplevel(master)
-        self.top.title("Revise Window")
-        self.top.protocol("WM_DELETE_WINDOW", self.close_window)
 
-        self.button_back = tk.Button(self.top, text="Back", command=self.back)
-        self.button_back.pack()
-
-        self.button_respell = tk.Button(self.top, text="Respell", command=self.open_respell_window)
-        self.button_respell.pack()
-
-        self.button_refresh = tk.Button(self.top, text="Refresh", command=self.open_refresh_window)
-        self.button_refresh.pack()
-
-        self.respell_window = None
-        self.refresh_window = None
-
-    def back(self):
-        self.top.withdraw()
-        self.master.deiconify()
-
-    def open_respell_window(self):
-        self.top.withdraw()
-        if self.respell_window:
-            self.respell_window.top.deiconify()
-        else:
-            self.respell_window = RespellWindow(self.top)
-
-    def back_to_revise(self, window):
-        window.destroy()
-        self.top.deiconify()
-
-    def open_refresh_window(self):
-        self.top.withdraw()
-        if self.refresh_window:
-            self.refresh_window.top.deiconify()
-        else:
-            self.refresh_window = RefreshWindow(self.top)
-
-        # Implement the functionality for the Refresh Window here
-
-    def close_window(self):
-        self.top.withdraw()
-        self.master.deiconify()
-
-
+# todo: implement
 class RespellWindow:
     def __init__(self, master):
         self.master = master
@@ -146,5 +100,45 @@ class RefreshWindow:
         # Implement the functionality for the Refresh Window here
 
     def close_window(self):
+        self.top.withdraw()
+        self.master.deiconify()
+
+
+class ConfigWindow:
+    def __init__(self, master):
+        self.master = master
+        self.master.withdraw()
+        self.top = tk.Toplevel(self.master)
+        self.top.title("Config")
+        self.top.bind("<Return>", self.execute_command)  # 绑定回车键
+        self.top.protocol("WM_DELETE_WINDOW", lambda: self.master.quit())
+        self.entry = tk.Entry(self.top)
+        self.back = tk.Button(self.top, text="Back", command=self.back)
+        self.output_text = tk.Text(self.top, height=20, state="disabled")
+        self.entry.pack(side="top", fill="x")
+        self.output_text.pack(side="top", fill="both", expand=True)
+        self.back.pack(side="bottom", pady=10)
+
+    def execute_command(self, event=None):
+        # 提取entry中输入的指令，
+        command = self.entry.get()
+        # 清空entry，
+        self.entry.delete(0, "end")
+        # 通过sh.cursor来执行指令，
+        try:
+            self.output_text.config(state="normal")
+            results = sh.fetchall(command)
+            for result in results:
+                self.output_text.insert("end", f"\n{result}")
+            self.output_text.config(state="disabled")
+            self.output_text.see("end")
+        # 如果出错，也把出错信息输出到显示框，其实就是做一个简易的sql控制台
+        except Exception as e:
+            self.output_text.config(state="normal")
+            self.output_text.insert("end", f"\nError: {e}")
+            self.output_text.config(state="disabled")
+            self.output_text.see("end")
+
+    def back(self):
         self.top.withdraw()
         self.master.deiconify()

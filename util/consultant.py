@@ -2,7 +2,7 @@ from pyquery import PyQuery as pq
 import requests
 from requests.exceptions import SSLError
 from typing import Callable
-
+from nltk.corpus import wordnet as wn
 
 options_name = ["pass", "review", "respell", "both"]
 url_bing = 'https://cn.bing.com/dict/search?q='
@@ -24,7 +24,7 @@ def primary_test(vocab, output: Callable[[str], None]):
         return None
 
 
-def rigid_bing_consult(vocab: str) -> (str, dict[str, str], [str]):
+def rigid_bing_consult(vocab: str) -> (str, dict[str, [str]], [str]):
     url = url_bing + vocab.replace(' ', '_') + '&intlFt=1'
     response = requests.get(url)
     doc = pq(response.text)
@@ -56,3 +56,23 @@ def rigid_bing_consult(vocab: str) -> (str, dict[str, str], [str]):
     else:
         examples = None
     return phonetic, rigid_translations, examples
+
+
+def consult_word(word, output: Callable[[str], None], output_mode=1):
+    if output_mode == 1:
+        output(f"\n查询{word}")
+    phonetic, rigid_translations, _ = rigid_bing_consult(word)
+    translation_count = 0
+    for trans in rigid_translations.values():
+        translation_count += len(trans)
+    synsets = wn.synsets(word)
+    if len(synsets) > 0 and translation_count > 0:
+        if output_mode == 1:
+            output(f"\n中:{translation_count}条")
+            output(f"\t英:{len(synsets)}条")
+        else:
+            output(f"\n查询{word}√")
+        return phonetic, rigid_translations, synsets
+    else:
+        output(f"\n查询{word}×")
+        return None, None, None
