@@ -106,6 +106,7 @@ class DictationWindow:
         self.main_entry.delete(0, tk.END)  # 清空输入框
         # 合法性检测
         if text == '':
+            self.main_label.config(text="Please enter sth")
             return
         elif all(char.isalpha() and
                  not char > u'\u3000' or char in [' ', '-', '|']
@@ -127,6 +128,7 @@ class DictationWindow:
         else:
             alias = None
         self.last_submit = text
+        self.option_var.set(0)
         # 合法性检测结束，查看是否在库中
         primary_query_result = sh.fetchall(f"select `translation` from `translations` where `origin`='{text}';")
         if primary_query_result:
