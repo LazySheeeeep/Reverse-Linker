@@ -1,4 +1,6 @@
-import tkinter as tk
+import ttkbootstrap as tk
+from ttkbootstrap.constants import *
+from ttkbootstrap.dialogs import Querybox
 from tkinter import messagebox
 from util import sqlhelper as sh
 
@@ -10,36 +12,59 @@ class RespellWindow:
         self.top = tk.Toplevel(master)
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
+        self.top.geometry("870x620")
+        self.top.update()
 
-        # self.word_list = self.get_respell_list()
-        self.current_index = 0
+        self.wrong_list_frame = tk.LabelFrame(text="错误的", master=self.top, style=DANGER, width=190, height=600)
+        self.wrong_list_frame.place(x=670, y=10)
+        self.correct_list_frame = tk.LabelFrame(text="正确的", master=self.top, style=PRIMARY, width=190, height=600)
+        self.correct_list_frame.place(x=10, y=10)
+        self.center_frame = tk.Labelframe(text="respell", master=self.top, style=PRIMARY, width=390, height=600)
+        self.center_frame.place(x=210, y=10)
 
-        self.output_text = tk.Text(self.top, height=10, state=tk.DISABLED)
-        self.output_text.pack(padx=50, pady=50)
+        # 将三个部件添加到新的Frame中
+        self.prompt_text = tk.Text(self.center_frame, width=30, height=12, state=tk.DISABLED)
+        self.prompt_text.grid(row=0, column=0, padx=10, pady=30)
 
-        self.entry = tk.Entry(self.top, width=30)
-        self.entry.pack(pady=10)
+        self.entry = tk.Entry(self.center_frame, width=30)
+        self.entry.grid(row=1, column=0, padx=10, pady=5)
         self.entry.bind("<Return>", self.check_answer)
         self.entry.focus_set()
 
-        self.wrong_list = []
-        self.wrong_list_panel = tk.Frame(self.top)
-        self.wrong_list_panel.pack(pady=10)
+        tk.Button(self.center_frame, text="Recall", width=10, bootstyle="danger", command=self.recall_word)\
+            .grid(row=2, column=0, padx=10, pady=5)
 
-        self.recall_button = tk.Button(self.top, text="Recall", width=10, command=self.recall_word)
-        self.recall_button.pack(pady=10)
+        self.correct_text = tk.Text(self.correct_list_frame, width=10, height=15, state=tk.DISABLED)
+        self.wrong_text = tk.Text(self.wrong_list_frame, width=10, height=15, state=tk.DISABLED)
 
         #self.show_next_word()
+        # self.word_list = self.get_respell_list()
+        # self.current_index = 0
 
-    def output(self, msg: str):
-        self.output_text.config(state=tk.NORMAL)
-        self.output_text.insert(tk.END, msg)
-        self.output_text.see(tk.END)
-        self.output_text.config(state=tk.DISABLED)
+        self.word_list = sh.fetchall("select `vocab` from `revise_list_today` where  `type` = 'respell';")
+        self.wrong_list = []
+        self.correct_list = []
+        self.start()
 
-    def get_respell_list(self):
-        respell_list = sh.fetchall("SELECT * FROM revise_list_today WHERE type='respell'")
-        return respell_list
+    def prompt(self, msg: str):
+        self.prompt_text.config(state=tk.NORMAL)
+        self.prompt_text.insert(tk.END, msg)
+        self.prompt_text.see(tk.END)
+        self.prompt_text.config(state=tk.DISABLED)
+
+    def add_wrong(self, word):
+        self.wrong_list.append(word)
+        self.wrong_text.config(state=tk.NORMAL)
+        self.wrong_text.insert(tk.E, '\n' + word)
+        self.wrong_text.see(tk.END)
+        self.wrong_text.config(state=tk.DISABLED)
+
+    def add_correct(self, word):
+        self.correct_list.append(word)
+        self.correct_text.config(state=tk.NORMAL)
+        self.correct_text.insert(tk.E, '\n' + word)
+        self.correct_text.see(tk.END)
+        self.correct_text.config(state=tk.DISABLED)
 
     def show_next_word(self):
         if self.current_index < len(self.word_list):
@@ -68,19 +93,12 @@ class RespellWindow:
             self.show_wrong_list()
             messagebox.showinfo("Incorrect", f"The correct spelling is: {correct_spelling}")
 
-    def show_wrong_list(self):
-        for widget in self.wrong_list_panel.winfo_children():
-            widget.destroy()
-
-        for i, word in enumerate(self.wrong_list):
-            label = tk.Label(self.wrong_list_panel, text=word["prompt"])
-            label.pack()
-
     def recall_word(self):
         if self.wrong_list:
-            word = self.wrong_list.pop()
-            self.update_mastery_level(word["respell_id"])
-            self.show_wrong_list()
+            self.wrong_text.config(state=tk.NORMAL)
+            self.wrong_text.delete(self.prompt_text.index("end-2c linestart"), "end")
+            self.wrong_text.config(state=tk.DISABLED)
+            self.add_correct(self.wrong_list.pop(-1))
 
     def update_mastery_level(self, respell_id):
         sh.exec_i(f"UPDATE revise_items SET mastery_level = mastery_level + 1 WHERE revise_id = {respell_id}")
@@ -88,6 +106,13 @@ class RespellWindow:
     def close_window(self):
         self.top.withdraw()
         self.master.deiconify()
+
+    def start(self):
+        total_amount = len(self.word_list)
+        if total_amount == 0:
+            self.prompt(f"\n今日计划已经完成")
+            return
+        self.prompt(f"\n今日需重拼：{total_amount}词")
 
 
 class RefreshWindow:
@@ -144,3 +169,9 @@ class ConfigWindow:
     def back(self):
         self.top.withdraw()
         self.master.deiconify()
+
+
+if __name__ == "__main__":
+    master = tk.Window()
+    RespellWindow(master)
+    master.mainloop()
