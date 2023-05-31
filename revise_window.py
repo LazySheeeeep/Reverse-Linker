@@ -1,6 +1,5 @@
 import ttkbootstrap as tk
 from ttkbootstrap.constants import *
-from ttkbootstrap.dialogs import Querybox
 from tkinter import messagebox
 from util import sqlhelper as sh
 
@@ -12,6 +11,7 @@ class RespellWindow:
         self.top = tk.Toplevel(master)
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
+        self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("870x620")
         self.top.update()
 
@@ -28,7 +28,7 @@ class RespellWindow:
 
         self.entry = tk.Entry(self.center_frame, width=30)
         self.entry.grid(row=1, column=0, padx=10, pady=5)
-        self.entry.bind("<Return>", self.check_answer)
+        self.entry.bind("<Return>", self.on_submit)
         self.entry.focus_set()
 
         tk.Button(self.center_frame, text="Recall", width=10, bootstyle="danger", command=self.recall_word)\
@@ -37,14 +37,17 @@ class RespellWindow:
         self.correct_text = tk.Text(self.correct_list_frame, width=10, height=15, state=tk.DISABLED)
         self.wrong_text = tk.Text(self.wrong_list_frame, width=10, height=15, state=tk.DISABLED)
 
-        #self.show_next_word()
-        # self.word_list = self.get_respell_list()
-        # self.current_index = 0
-
-        self.word_list = sh.fetchall("select `vocab` from `revise_list_today` where  `type` = 'respell';")
+        self.word_list = sh.fetchall("select `vocab` from `revise_list_today` \
+                                        where  `type` = 'respell' collate utf8mb4_unicode_ci;")
+        self.total_amount = len(self.word_list)
         self.wrong_list = []
         self.correct_list = []
         self.start()
+        self.current_index = 0  # 指向第几个单词
+        self.state = 0  # on_submit函数根据当前状态来决定prompt，0表示什么都不做
+
+        # 上一次提交的内容
+        self.last_submit = ""
 
     def prompt(self, msg: str):
         self.prompt_text.config(state=tk.NORMAL)
@@ -66,6 +69,19 @@ class RespellWindow:
         self.correct_text.see(tk.END)
         self.correct_text.config(state=tk.DISABLED)
 
+    def start(self):
+        if self.total_amount == 0:
+            messagebox.showinfo("今日计划已经完成")
+            self.close_window()
+            return
+        result = messagebox.askquestion("提示", f"\n今日需重拼：{self.total_amount}词，是否开始？")
+        if result == "yes":
+            self.prompt("Start：")
+            for word in self.word_list:
+                self.prompt(f"\n{word}")
+        else:
+            self.prompt("\n取消操作")
+
     def show_next_word(self):
         if self.current_index < len(self.word_list):
             word = self.word_list[self.current_index]
@@ -75,7 +91,8 @@ class RespellWindow:
         else:
             messagebox.showinfo("Finished", "You have finished respelling all the words.")
 
-    def check_answer(self, event):
+    def on_submit(self, event):
+        return
         answer = self.entry.get().strip()
         word = self.word_list[self.current_index]
         correct_spelling = word["spelling"]
@@ -100,19 +117,23 @@ class RespellWindow:
             self.wrong_text.config(state=tk.DISABLED)
             self.add_correct(self.wrong_list.pop(-1))
 
-    def update_mastery_level(self, respell_id):
-        sh.exec_i(f"UPDATE revise_items SET mastery_level = mastery_level + 1 WHERE revise_id = {respell_id}")
+    def update_mastery_level(self):
+        cnt = 0
+        for word in self.correct_list:
+            cnt += sh.exec_i(f"update revise_items set mastery_level = mastery_level + 1 where revise_id in \
+                            (select `respell_id` from `words` where `spelling` = '{word}');")
+        self.prompt(f"\n正确单词{len(self.correct_list)}个，共{cnt}个单词重拼计划已更新")
+        cnt = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
+        self.prompt(f"\n其中共有{cnt}个单词已经完全消除")
+        cnt = 0
+        for word in self.wrong_list:
+            alias = sh.fetchone(f"select `alias` from `words` where `spelling` = '{word}'")
+            cnt += sh.word_renew_plan(word, 2, self.prompt, alias=alias, output_mode=0)
+        self.prompt(f"\n另有拼错的单词{len(self.word_list)}个\n{cnt}个重新加入重拼计划")
 
     def close_window(self):
         self.top.withdraw()
         self.master.deiconify()
-
-    def start(self):
-        total_amount = len(self.word_list)
-        if total_amount == 0:
-            self.prompt(f"\n今日计划已经完成")
-            return
-        self.prompt(f"\n今日需重拼：{total_amount}词")
 
 
 class RefreshWindow:
