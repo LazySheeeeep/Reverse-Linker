@@ -114,6 +114,8 @@ create table `example_sentences`(
 
 
 -- 视图
+
+-- 全日期
 -- 复习计划总表
 drop view if exists `revise_list_all`;
 create view `revise_list_all` as
@@ -129,29 +131,55 @@ select `revise_id`, `words`.`spelling`, `mastery_level`, `next_revise_date`, 're
 from `revise_items`
 join `words` on `respell_id` = `revise_id`;
 
--- 重现计划清单
-drop view if exists `refresh_list_all`;
-create view `refresh_list_all` as
-select `revise_id`, `spelling` as 'vocab', `mastery_level`, `next_revise_date`, 'word' as `type`
+-- 单词重现计划总表
+drop view if exists `refresh_words_all`;
+create view `refresh_words_all` as
+select `revise_id`, `spelling`, `phonetic`, `mastery_level`, `next_revise_date`
 from `revise_items`
-join `words` on `refresh_id` = `revise_id`
-union
-select `revise_id`, `phrase`, `mastery_level`, `next_revise_date`, 'phrase'
+join `words` on `refresh_id` = `revise_id`;
+
+-- 词组重现计划总表
+drop view if exists `refresh_phrases_all`;
+create view `refresh_phrases_all` as
+select `revise_id`, `phrase`, `related_word`, `mastery_level`, `next_revise_date`
 from `revise_items`
 join `phrases` on `refresh_id` = `revise_id`;
 
 -- 重拼计划总表
-drop view if exists `respell_list_all`;
-create view `respell_list_all` as
-select `revise_id`, `spelling`, `alias`, `next_revise_date`, `mastery_level`
+drop view if exists `respell_words_all`;
+create view `respell_words_all` as
+select `revise_id`, `spelling`, `phonetic`, `alias`, `mastery_level`, `next_revise_date`
 from `revise_items`
 join `words` on `respell_id` = `revise_id`;
 
+
+-- 今日部分
 -- 今日复习计划总表
 drop view if exists `revise_list_today`;
 create view `revise_list_today` as
 select * from `revise_list_all`
-where `next_revise_date` >= curdate();
+where `next_revise_date` <= curdate();
+
+-- 今日重现单词表
+drop view if exists `refresh_words_today`;
+create view `refresh_words_today` as
+select `revise_id`, `spelling`, `phonetic`, `mastery_level`
+from `refresh_words_all`
+where `next_revise_date` <= curdate();
+
+-- 今日重现词组表
+drop view if exists `refresh_phrases_today`;
+create view `refresh_phrases_today` as
+select `revise_id`, `phrase`, `related_word`, `mastery_level`
+from `refresh_phrases_all`
+where `next_revise_date` <= curdate();
+
+-- 今日重拼计划单词表
+drop view if exists `respell_words_today`;
+create view `respell_words_today` as
+select `revise_id`, `spelling`, `phonetic`, `alias`, `mastery_level`
+from `respell_words_all`
+where `next_revise_date` <= curdate();
 
 -- (提供给触发器删除逻辑使用)多词意义表
 drop view if exists `shared_meaning_ids`;
@@ -166,11 +194,11 @@ having count(*) <> 1;
 delimiter $$
 
 -- 触发器
--- 加入新计划时自动插入下次复习日期
+-- 加入新计划时如果没指定日期则自动根据今日日期自动插入下次复习日期
 drop trigger if exists `set_date_before_insert_item`$$
 create trigger `set_date_before_insert_item`
 before insert on `revise_items`
-for each row
+for each row 
 begin
 	if new.`next_revise_date` is null then begin
 		declare `_interval_` tinyint;
@@ -201,7 +229,7 @@ begin
 end$$
 
 -- 当复习计划完成时，复习单元删除后需要清理相关表项
--- 仅当单词同时没有复现和重拼的计划时才触发删除; 短语将直接被cascade删除无需手动删;
+-- 仅当单词同时没有复现和重拼的计划时才触发删除; 短语将直接被cascade删除无需手动删; 
 drop trigger if exists `delete_words_after_delete_plan`$$
 create trigger `delete_words_after_delete_plan`
 after delete on `revise_items`
