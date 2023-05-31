@@ -101,8 +101,9 @@ class RespellWindow:
         self.correct_text.config(state=tk.DISABLED)
 
     def start(self):
+        self.current_index = -1
         if self.total_amount == 0:
-            messagebox.showinfo("今日计划已经完成")
+            messagebox.showinfo(message="今日计划已经完成")
             self.close_window()
             return
         result = messagebox.askquestion("提示", f"\n今日需重拼：{self.total_amount}词，是否开始？")
