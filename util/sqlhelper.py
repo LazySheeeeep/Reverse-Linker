@@ -110,9 +110,12 @@ def insert_translations(origin, rigid_translations, output: Callable[[str], None
         pos_id = pos_dict.get(pos, 0)
         for tran in trans:
             command += f"('{origin}', '{pos_id}', '{tran}'),"
-    cnt = exec_i(command[:-1] + ';')
-    if output_mode == 1:
-        output(f"\ntranslations：{cnt}")
+    try:
+        cnt = exec_i(command[:-1] + ';')
+        if output_mode == 1:
+            output(f"\ntranslations：{cnt}")
+    except Exception:
+        output(f"\nfrom {origin}, command {command}")
 
 
 def phrase_process(phrase: str, output: Callable[[str], None], note: str = None, related_word: str = None):
@@ -241,7 +244,7 @@ def import_from_file(filename, output: Callable[[str], None], date, mastery='1')
         for line in f.readlines():
             if line.startswith("#"):
                 continue
-            word = line.strip()
+            word = line.strip()  # line.split(']')[-1].strip() # line.split(',')[1]
             exist_result = fetchone(f"select * from words where spelling = '{word}';")
             # 已有，更新计划，输出消息
             if exist_result:
