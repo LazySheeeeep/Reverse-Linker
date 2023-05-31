@@ -110,8 +110,9 @@ def insert_translations(origin, rigid_translations, output: Callable[[str], None
         pos_id = pos_dict.get(pos, 0)
         for tran in trans:
             command += f"('{origin}', '{pos_id}', '{tran}'),"
+    cnt = exec_i(command[:-1] + ';')
     if output_mode == 1:
-        output(f"\ntranslations：{exec_i(command[:-1] + ';')}")
+        output(f"\ntranslations：{cnt}")
 
 
 def phrase_process(phrase: str, output: Callable[[str], None], note: str = None, related_word: str = None):
@@ -162,6 +163,8 @@ def word_renew_plan(word: str, op: int, output: Callable[[str], None], note: str
             output("respell renewed ")
     if output_mode == 1:
         output(f"\t{cnt}√")
+    else:
+        return cnt
 
 
 def word_join_plan(word: str, op: int, output: Callable[[str], None], phonetic: str,
@@ -250,7 +253,7 @@ def import_from_file(filename, output: Callable[[str], None], date, mastery='1')
     if len(error_list) == 0:
         output("\n所有单词均加入计划，按commit保存结果到数据库")
         return
-    if len(error_list) > 0 and len(error_list) < 30:
+    if 0 < len(error_list) < 30:
         output("\n二次查询开始")
         thread_list.clear()
         all_content.clear()
