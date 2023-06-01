@@ -33,9 +33,9 @@ def collate(str1: str, str2: str) -> int:
 
 
 class RespellWindow:
-    def __init__(self, master):
+    def __init__(self, master, alpha):
         self.master = master
-        self.top = tk.Toplevel(master)
+        self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
         self.top.protocol("WM_DEICONIFY", self.start)
@@ -193,9 +193,9 @@ class RespellWindow:
 
 # todo: implement 跳过部分
 class RefreshWindow:
-    def __init__(self, master):
+    def __init__(self, master, alpha):
         self.master = master
-        self.top = tk.Toplevel(master)
+        self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
         self.top.protocol("WM_DEICONIFY", self.start)

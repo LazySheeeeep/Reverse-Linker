@@ -12,8 +12,9 @@ subwin = [("Dictation", iw.DictationWindow),
 
 
 class MainWindow:
-    def __init__(self):
-        self.master = tk.Window(alpha=0.8)
+    def __init__(self, alpha):
+        self.alpha = alpha
+        self.master = tk.Window(alpha=alpha)
         self.master.place_window_center()
         self.master.title("Function Selection")
         for i, (win_name, _) in enumerate(subwin):
@@ -29,8 +30,8 @@ class MainWindow:
         if self.subwindow_list[num]:
             self.subwindow_list[num].top.deiconify()
         else:
-            self.subwindow_list[num] = subwin[num][1](self.master)
+            self.subwindow_list[num] = subwin[num][1](self.master, self.alpha)
 
 
 if __name__ == "__main__":
-    MainWindow()
+    MainWindow(0.85)

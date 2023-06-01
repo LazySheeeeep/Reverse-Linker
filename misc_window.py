@@ -36,10 +36,9 @@ panel_info_list = [
 
 
 class MiscWindow:
-    def __init__(self, master):
+    def __init__(self, master, alpha):
         self.master = master
-        self.master.withdraw()
-        self.top = tk.Toplevel(self.master)
+        self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("Miscellaneous")
         self.top.protocol("WM_DELETE_WINDOW", lambda: self.back())
         # 总的看来是一个看板

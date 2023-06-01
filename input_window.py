@@ -10,9 +10,9 @@ options_name = ["pass", "review", "respell", "both"]
 
 
 class DictationWindow:
-    def __init__(self, master):
+    def __init__(self, master, alpha):
         self.master = master
-        self.top = tk.Toplevel(self.master, alpha=0.85, background='grey')
+        self.top = tk.Toplevel(self.master, alpha=alpha, background='grey')
         self.top.title("Input Window")
         self.top.resizable(True, True)
         self.top.place_window_center()
@@ -190,14 +190,14 @@ class DictationWindow:
 if __name__ == "__main__":
     root = tk.Window()
     root.withdraw()
-    DictationWindow(root)
+    DictationWindow(root, 0.85)
     root.mainloop()
 
 
 class ImportFileWindow:
-    def __init__(self, master):
+    def __init__(self, master, alpha):
         self.master = master
-        self.top = tk.Toplevel(master, alpha=0.9)
+        self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("选择单词文件导入数据库，文件内一行一个单词，不支持词组")
         self.file_select_btn = tk.Button(self.top, text="选择文件", command=self.open_file)
         self.file_select_btn.grid(row=0, column=0, padx=10, pady=10)
@@ -223,7 +223,7 @@ class ImportFileWindow:
         if self.path is None or self.path == '':
             self.output("\n文件不能为空")
             return
-        mastery = Querybox.get_integer(parent=self.top, title="掌握程度",minvalue=0, maxvalue=4)
+        mastery = Querybox.get_integer(parent=self.top, title="掌握程度", minvalue=0, maxvalue=4)
         date = self.date_entry.entry.get()
         self.output(f"\npath:{self.path},date:{date},mastery:{mastery}")
         sh.commit_and_start()
@@ -235,7 +235,6 @@ class ImportFileWindow:
     def close(self):
         self.top.withdraw()
         self.master.deiconify()
-
 
     def output(self, msg: str):
         self.output_text.config(state=tk.NORMAL)
