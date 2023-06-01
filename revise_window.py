@@ -58,7 +58,7 @@ class RespellWindow:
         self.entry.bind("<Return>", self.on_submit)
         self.entry.focus_set()
 
-        tk.Button(self.center_frame, text="Recall", width=10, bootstyle="danger", command=self.recall_word) \
+        tk.Button(self.center_frame, text="Recall", width=10, style="danger", command=self.recall_word) \
             .grid(row=2, column=0, padx=10, pady=5)
 
         self.correct_text = tk.Text(self.correct_list_frame, width=12, height=15, state=tk.DISABLED)
@@ -220,11 +220,11 @@ class RefreshWindow:
         self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=30)
 
         # , command=self.recall_word)
-        tk.Button(self.center_frame, text="Recall", width=10, bootstyle="danger", command=self.recall)\
+        tk.Button(self.center_frame, text="Recall", width=10, style="danger", command=self.recall)\
             .grid(row=2, column=0, padx=10, pady=5)
-        tk.Button(self.center_frame, text="√", width=10, bootstyle=PRIMARY, command=self.on_confirm)\
+        tk.Button(self.center_frame, text="√", width=10, style=PRIMARY, command=self.on_confirm)\
             .grid(row=2, column=1, padx=10, pady=5)
-        tk.Button(self.center_frame, text="×", width=10, bootstyle="danger", command=self.on_no)\
+        tk.Button(self.center_frame, text="×", width=10, style="danger", command=self.on_no)\
             .grid(row=2, column=2, padx=10, pady=5)
 
         self.correct_text = tk.Text(self.correct_list_frame, width=12, height=30, state=tk.DISABLED)
@@ -408,46 +408,6 @@ class RefreshWindow:
         self.wrong_list.clear()
         sh.db.commit()
         self.prompt(f"\ncommitted")
-
-
-class ConfigWindow:
-    def __init__(self, master):
-        self.master = master
-        self.master.withdraw()
-        self.top = tk.Toplevel(self.master)
-        self.top.title("Config")
-        self.top.bind("<Return>", self.execute_command)  # 绑定回车键
-        self.top.protocol("WM_DELETE_WINDOW", lambda: self.master.quit())
-        self.entry = tk.Entry(self.top)
-        self.back = tk.Button(self.top, text="Back", command=self.back)
-        self.output_text = tk.Text(self.top, height=20, state="disabled")
-        self.entry.pack(side="top", fill="x")
-        self.output_text.pack(side="top", fill="both", expand=True)
-        self.back.pack(side="bottom", pady=10)
-
-    def execute_command(self, event=None):
-        # 提取entry中输入的指令，
-        command = self.entry.get()
-        # 清空entry，
-        self.entry.delete(0, "end")
-        # 通过sh.cursor来执行指令，
-        try:
-            self.output_text.config(state="normal")
-            results = sh.fetchall(command)
-            for result in results:
-                self.output_text.insert("end", f"\n{result}")
-            self.output_text.config(state="disabled")
-            self.output_text.see("end")
-        # 如果出错，也把出错信息输出到显示框，其实就是做一个简易的sql控制台
-        except Exception as e:
-            self.output_text.config(state="normal")
-            self.output_text.insert("end", f"\nError: {e}")
-            self.output_text.config(state="disabled")
-            self.output_text.see("end")
-
-    def back(self):
-        self.top.withdraw()
-        self.master.deiconify()
 
 
 if __name__ == "__main__":
