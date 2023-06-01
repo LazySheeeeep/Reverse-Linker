@@ -102,10 +102,10 @@ class RespellWindow:
     def start(self):
         self.current_index = -1
         if self.total_amount == 0:
-            Messagebox.show_info(message="今日计划已经完成")
+            Messagebox.show_info(message="今日计划已经完成", parent=self.top)
             self.close_window()
             return
-        result = Messagebox.show_question(message=f"\n今日需重拼：{self.total_amount}词，是否开始？")
+        result = Messagebox.show_question(message=f"\n今日需重拼：{self.total_amount}词，是否开始？", parent=self.top)
         if result == "确认":
             self.prompt("Start：")
             self.move_on()
@@ -315,10 +315,10 @@ class RefreshWindow:
     def start(self):
         self.current_index = -1
         if self.total_amount == 0:
-            Messagebox.show_info(message="今日计划已经完成")
+            Messagebox.show_info(message="今日计划已经完成", parent=self.top)
             self.close_window()
             return
-        result = Messagebox.show_question(message=f"\n今日计划共：{self.total_amount}词，是否开始？")
+        result = Messagebox.show_question(message=f"\n今日计划共：{self.total_amount}词，是否开始？", parent=self.top)
         if result == "确认":
             self.prompt("Start：")
             if self.can_move_on():
@@ -380,7 +380,7 @@ class RefreshWindow:
             _, phrase, relate_word, level = tuple1
             if relate_word:
                 self.prompt_translations(phrase, level)
-                Messagebox.show_info(message=relate_word)
+                Messagebox.show_info(parent=self.top, message=relate_word)
             else:
                 self.prompt_translations(phrase, level)
         self.state = "THINKING"
@@ -412,5 +412,5 @@ class RefreshWindow:
 
 if __name__ == "__main__":
     master = tk.Window()
-    RefreshWindow(master)
+    RefreshWindow(master, 0.85)
     master.mainloop()
