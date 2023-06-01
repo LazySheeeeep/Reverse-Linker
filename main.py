@@ -15,11 +15,10 @@ class MainWindow:
     def __init__(self, alpha):
         self.alpha = alpha
         self.master = tk.Window(alpha=alpha)
-        self.master.place_window_center()
-        self.master.title("Function Selection")
+        self.master.title("反向连接建立器")
         for i, (win_name, _) in enumerate(subwin):
             tk.Button(self.master, text=win_name, width=10,
-                      command=lambda i=i: self.show_subwindow(i)).pack(side=tk.LEFT, padx=10)
+                      command=lambda i=i: self.show_subwindow(i)).pack(side=tk.LEFT, padx=10, pady=25)
 
         self.subwindow_list = [None] * len(subwin)
 
