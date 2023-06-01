@@ -201,6 +201,8 @@ class RefreshWindow:
         self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("1330x1045")
         self.top.update()
+        self.top.bind("<Return>", lambda _=None: self.on_confirm())
+        self.top.bind("<Tab>", lambda _=None: self.on_tab())
 
         self.correct_list_frame = tk.LabelFrame(text="pass", master=self.top, style=PRIMARY, width=200, height=900)
         self.correct_list_frame.place(x=10, y=10)
@@ -216,6 +218,8 @@ class RefreshWindow:
         self.nb.add(self.meaning_text, text="en", sticky=tk.W)
         self.translation_text = tk.Text(master=self.nb, width=890, height=300, state=tk.NORMAL)
         self.nb.add(self.translation_text, text="cn", sticky=tk.W)
+        self.nb_state = "en"
+
         self.outcome_text = tk.Text(self.center_frame, width=60, height=15, state=tk.DISABLED)
         self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=30)
 
@@ -306,7 +310,7 @@ class RefreshWindow:
         self.meaning_text.delete("1.0", tk.END)
         self.meaning_text.insert(tk.END, f"mastery level:{level}\n")
         for key in d.keys():
-            self.meaning_text.insert(tk.END, f"{key}:\n  ")
+            self.meaning_text.insert(tk.END, f"{key}\n  ")
             self.meaning_text.insert(tk.END, '\n  '.join(d[key]))
             self.meaning_text.insert(tk.END, '\n')
         self.meaning_text.config(state=tk.DISABLED)
@@ -401,12 +405,20 @@ class RefreshWindow:
         self.prompt(f"\n熟悉{len(self.correct_list)}\t更新{self.correct_update_count}\t消除{self.delete_count}")
         cnt = 0
         for _id, word in self.wrong_list:
-            note = sh.fetchone(f"select `note` from `notes` where `revise_id` = '{_id}'")
+            note = sh.fetchone(f"select `content` from `notes` where `revise_id` = '{_id}'")
             cnt += sh.word_renew_plan(word, 1, self.prompt, note=note, output_mode=0)
         self.prompt(f"\n不熟{len(self.wrong_list)}\t重新加入{cnt}")
         self.wrong_list.clear()
         sh.db.commit()
         self.prompt(f"\ncommitted")
+
+    def on_tab(self):
+        if self.nb_state == "en":
+            self.nb_state = "cn"
+            self.nb.select(self.translation_text)
+        else:
+            self.nb_state = "en"
+            self.nb.select(self.meaning_text)
 
 
 if __name__ == "__main__":
