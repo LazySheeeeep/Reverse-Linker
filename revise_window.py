@@ -219,7 +219,6 @@ class RefreshWindow:
         self.outcome_text = tk.Text(self.center_frame, width=60, height=15, state=tk.DISABLED)
         self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=30)
 
-        # , command=self.recall_word)
         tk.Button(self.center_frame, text="Recall", width=10, style="danger", command=self.recall)\
             .grid(row=2, column=0, padx=10, pady=5)
         tk.Button(self.center_frame, text="√", width=10, style=PRIMARY, command=self.on_confirm)\
