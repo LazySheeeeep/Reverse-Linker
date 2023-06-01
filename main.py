@@ -1,36 +1,14 @@
 import ttkbootstrap as tk
 import input_window as iw
 import revise_window as rw
-
-class LoginWindow:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Password Verification")
-        self.master.geometry("300x100+400+300")
-        self.master.resizable(False, False)
-
-        self.label = tk.Label(self.master, text="Please enter the password:")
-        self.label.pack(pady=(20, 5))
-        self.entry = tk.Entry(self.master, show="*")
-        self.entry.pack(pady=(0, 10))
-        self.entry.bind("<Return>", self.check_password)  # 绑定回车键
-        self.submit = tk.Button(self.master, text="Submit", command=self.check_password)
-        self.submit.pack(pady=(0, 10))
-
-    def check_password(self, event=None):
-        password = self.entry.get()
-        if password == "12345":
-            self.master.destroy()
-            MainWindow()
-        else:
-            self.label.config(text="Invalid password, please try again.")
+import misc_window as mw
 
 
 subwin = [("Dictation", iw.DictationWindow),
           ("Import File", iw.ImportFileWindow),
           ("Refresh", rw.RefreshWindow),
           ("Respell", rw.RespellWindow),
-          ("Misc", rw.ConfigWindow)]
+          ("Misc", mw.MiscWindow)]
 
 
 class MainWindow:
