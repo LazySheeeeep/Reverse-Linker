@@ -196,7 +196,7 @@ class RefreshWindow:
     def __init__(self, master, alpha):
         self.master = master
         self.top = tk.Toplevel(master, alpha=alpha)
-        self.top.title("Respell Window")
+        self.top.title("Refresh Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
         self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("1330x1045")
