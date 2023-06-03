@@ -50,7 +50,7 @@ class RespellWindow:
         self.center_frame.place(x=210, y=10)
 
         # 将三个部件添加到新的Frame中
-        self.prompt_text = tk.Text(self.center_frame, width=30, height=12, state=tk.DISABLED)
+        self.prompt_text = tk.Text(self.center_frame, width=30, height=12, state=tk.DISABLED, font=("Courier", 10))
         self.prompt_text.grid(row=0, column=0, padx=10, pady=30)
 
         self.entry = tk.Entry(self.center_frame, width=30)
@@ -159,7 +159,7 @@ class RespellWindow:
             self.add_wrong(word)
 
     def recall_word(self):
-        if self.wrong_list:
+        if (self.state == "THINKING" or self.state == "MUST_SUBMIT") and self.wrong_list:
             self.wrong_text.config(state=tk.NORMAL)
             self.wrong_text.delete("end-2l", "end-1c")  # 删除最后一行的文本
             self.wrong_text.config(state=tk.DISABLED)
@@ -423,5 +423,5 @@ class RefreshWindow:
 
 if __name__ == "__main__":
     master = tk.Window()
-    RefreshWindow(master, 0.85)
+    RespellWindow(master, 0.85)
     master.mainloop()
