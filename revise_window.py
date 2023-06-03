@@ -181,6 +181,8 @@ class RespellWindow:
         cnt = 0
         for word in self.wrong_list:
             alias = sh.fetchone(f"select `alias` from `words` where `spelling` = '{word}'")
+            if alias == (None,):
+                alias = None
             cnt += sh.word_renew_plan(word, 2, self.prompt, alias=alias, output_mode=0)
         self.prompt(f"\n拼错{len(self.wrong_list)}\t重新加入{cnt}")
         sh.db.commit()
