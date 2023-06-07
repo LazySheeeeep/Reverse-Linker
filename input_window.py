@@ -72,7 +72,7 @@ class DictationWindow:
 
     def commit(self):
         sh.exec_i("commit;")
-        self.output("committed")
+        self.output("\ncommitted")
 
     def up_handler(self, event=None):
         self.main_entry.delete(0, tk.END)

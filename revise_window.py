@@ -39,11 +39,11 @@ class RespellWindow:
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
         self.top.protocol("WM_DEICONIFY", self.start)
-        self.top.geometry("870x620")
+        self.top.geometry("930x590")
         self.top.update()
 
         self.wrong_list_frame = tk.LabelFrame(text="错误的", master=self.top, style=DANGER, width=200, height=600)
-        self.wrong_list_frame.place(x=670, y=10)
+        self.wrong_list_frame.place(x=730, y=10)
         self.correct_list_frame = tk.LabelFrame(text="正确的", master=self.top, style=PRIMARY, width=200, height=600)
         self.correct_list_frame.place(x=10, y=10)
         self.center_frame = tk.Labelframe(text="respell", master=self.top, style=PRIMARY, width=390, height=600)
