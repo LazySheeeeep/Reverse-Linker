@@ -128,7 +128,6 @@ class DictationWindow:
         else:
             alias = None
         self.last_submit = text
-        self.option_var.set(0)
         # 合法性检测结束，查看是否在库中
         primary_query_result = sh.fetchall(f"select `translation` from `translations` where `origin`='{text}';")
         if primary_query_result:
@@ -185,6 +184,9 @@ class DictationWindow:
             self.output("\ncommit and start")
             threading.Thread(target=lambda:
             sh.word_process(word=text, op=option_num, output=self.output, note=note_text, alias=alias)).start()
+        # 回复到默认pass
+        self.option_var.set(0)
+        self.invisible_note_entry()
 
 
 if __name__ == "__main__":
