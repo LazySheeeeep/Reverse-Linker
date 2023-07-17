@@ -16,3 +16,17 @@ Database course design: glossary with GUI using python, tkinter.
 - ./revise_window.py      -------含有RefreshWindow和RespellWindow两个类的实现  
 - ./misc_window.py-------------MiscWindow部分的实现
 - ./main.py----------------------主窗口部分以及主函数的实现
+
+### 作品展示
+- 听写
+![[photo_2023-07-17_16-48-30.jpg]]
+![[photo_2023-07-17_16-48-32.jpg]]
+- 文件输入
+![[photo_2023-07-17_16-48-34.jpg]]
+![[photo_2023-07-17_16-48-35.jpg]]
+- refresh
+![[photo_2023-07-17_16-48-38.jpg]]![[photo_2023-07-17_16-48-39.jpg]]![[photo_2023-07-17_16-48-40.jpg]]
+- respell
+![[image_2023-07-17_16-47-22.png]]
+- misc
+![[photo_2023-07-17_16-48-36.jpg]]
