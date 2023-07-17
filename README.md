@@ -19,14 +19,14 @@ Database course design: glossary with GUI using python, tkinter.
 
 ### 作品展示
 - 听写
-![[photo_2023-07-17_16-48-30.jpg]]
-![[photo_2023-07-17_16-48-32.jpg]]
+![[./showcase/photo_2023-07-17_16-48-30.jpg]]
+![[./showcase/photo_2023-07-17_16-48-32.jpg]]
 - 文件输入
-![[photo_2023-07-17_16-48-34.jpg]]
-![[photo_2023-07-17_16-48-35.jpg]]
+![[./showcase/photo_2023-07-17_16-48-34.jpg]]
+![[./showcase/photo_2023-07-17_16-48-35.jpg]]
 - refresh
-![[photo_2023-07-17_16-48-38.jpg]]![[photo_2023-07-17_16-48-39.jpg]]![[photo_2023-07-17_16-48-40.jpg]]
+![[./showcase/photo_2023-07-17_16-48-38.jpg]]![[./showcase/photo_2023-07-17_16-48-39.jpg]]![[./showcase/photo_2023-07-17_16-48-40.jpg]]
 - respell
-![[image_2023-07-17_16-47-22.png]]
+![[./showcase/image_2023-07-17_16-47-22.png]]
 - misc
-![[photo_2023-07-17_16-48-36.jpg]]
+![[./showcase/photo_2023-07-17_16-48-36.jpg]]
