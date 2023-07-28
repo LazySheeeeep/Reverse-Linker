@@ -66,7 +66,7 @@ class RespellWindow:
         self.wrong_text = tk.Text(self.wrong_list_frame, width=12, height=15, state=tk.DISABLED)
         self.wrong_text.pack(padx=5, pady=30)
 
-        self.all_tuples = sh.fetchall("select * from `respell_words_today`;")
+        self.all_tuples = sh.fetchall("select * from `respell_words_today` limit 30;")
         self.total_amount = len(self.all_tuples)
         self.wrong_list = []
         self.correct_list = []
