@@ -6,7 +6,7 @@ from nltk.corpus import wordnet as wn
 
 options_name = ["pass", "review", "respell", "both"]
 url_bing = 'https://cn.bing.com/dict/search?q='
-skip_words = ["现在分词", "过去分词", "同“", "的变体"]
+skip_words = ["现在分词", "过去分词", "同“", "的变体", "的复数"]
 pos_dict = {'O': 0, 'n': 1, 'v': 2, 'adj': 3, 'adv': 4, 'prep': 5, 'phr': 6, 'syn': 7, 'intj': 8, 'conj': 9}
 
 
