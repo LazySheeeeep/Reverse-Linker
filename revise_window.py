@@ -273,6 +273,7 @@ class RefreshWindow:
         self.prompt(f"\n{word}√:{cnt}")
         if cnt2 == 1:
             self.prompt(f"\n{word}重现计划已完成{cnt}")
+            self.delete_count += 1
 
     def add_wrong(self, _id, word):
         self.wrong_list.append((_id, word))
