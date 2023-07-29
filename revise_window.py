@@ -244,6 +244,7 @@ class RefreshWindow:
         self.all_phrases_count = lambda: int(sh.fetchone("select count(*) from `refresh_phrases_today`;")[0])
         self.wrong_list = []
         self.correct_list = []
+        self.word_dict = {}
         self.current_index = -1  # 指向第几个单词
         self.state = "IDLE"  # on_submit函数根据当前状态来决定prompt，IDLE表示什么都不做
         self.can_recall = False
@@ -303,24 +304,25 @@ class RefreshWindow:
         self.translation_text.config(state=tk.DISABLED)
 
     def prompt_meanings(self, word, level):
-        results = sh.fetchall(f"select `abbreviation`, `meaning`\
-                                         from `meanings`\
-                                         join `part_of_speeches` using (`pos_id`)\
-                                         where `meaning_id` in\
-                                         (select meaning_id from word_ids where spelling = '{word}');")
-        d = {}
-        for (pos, meaning) in results:
-            if pos in d:
-                d[pos].append(meaning)
+        results = sh.fetchall(f"select `abbreviation`, `meaning`, `meaning_id`\
+                                 from `meanings`\
+                                 join `part_of_speeches` using (`pos_id`)\
+                                 where `meaning_id` in\
+                                 (select meaning_id from word_ids where spelling = '{word}');")
+        self.word_dict.clear()
+        for (pos, meaning, meaning_id) in results:
+            if pos in self.word_dict:
+                self.word_dict[pos].append((meaning_id, meaning))
             else:
-                d[pos] = [meaning]
+                self.word_dict[pos] = [(meaning_id, meaning)]
         self.meaning_text.config(state=tk.NORMAL)
         self.meaning_text.delete("1.0", tk.END)
-        self.meaning_text.insert(tk.END, f"mastery level:{level}\n")
-        for key in d.keys():
-            self.meaning_text.insert(tk.END, f"{key}\n  ")
-            self.meaning_text.insert(tk.END, '\n  '.join(d[key]))
-            self.meaning_text.insert(tk.END, '\n')
+        self.meaning_text.insert(tk.END, f"mastery level:{level}")
+        for pos in self.word_dict.keys():
+            self.meaning_text.insert(tk.END, f"\n{pos}")
+            for (_, meaning) in self.word_dict[pos]:
+                self.meaning_text.insert(tk.END, '\n  ' + meaning)
+            self.sentence_text.insert(tk.END, '\n')
         self.meaning_text.config(state=tk.DISABLED)
 
     def prompt_note(self, _id, vocab):
@@ -328,24 +330,41 @@ class RefreshWindow:
         if note:
             Messagebox.show_info(message=f"{vocab}:{note}", parent=self.top, title="Note")
 
-    def prompt_example_sentences(self, vocab):
+    def prompt_example_sentences_for_phrase(self, phrase):
         self.sentence_text.config(state=tk.NORMAL)
         self.sentence_text.delete("1.0", tk.END)
-        self.sentence_text.insert(tk.END, f"{vocab}'s example sentences:")
-        if ' ' in vocab:  # is a phrase
-            sentences = sh.fetchall(f"select `sentence` from `example_sentences` where `phrase` = '{vocab}';")
-            if sentences:
-                for sentence in sentences:
-                    self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
-            else:
-                self.sentence_text.insert(tk.END, f"\n{vocab} has no example sentences:(")
+        self.sentence_text.insert(tk.END, f"{phrase}'s example sentences:")
+        sentences = sh.fetchall(f"select `sentence` from `example_sentences` where `phrase` = '{phrase}';")
+        if sentences:
+            for sentence in sentences:
+                self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
         else:
-            # fetch all the meaning_ids first:
-            meaning_ids = sh.fetchall(f"select `meaning_id` from `word_ids` where `spelling` = '{vocab}';")
-            # TODO: sentences and synonyms function is to be implemented
-            query = f"select `sentence` from `example_sentences` where `meaning_id` in ("\
-                    + ", ".join(meaning_ids) + ");"
-            sentences = sh.fetchall(query)
+            self.sentence_text.insert(tk.END, f"\n{phrase} has no example sentences:(")
+
+    # example sentences and antonyms&synonyms prompting
+    def prompt_example_sentences_for_word(self, word):
+        self.sentence_text.config(state=tk.NORMAL)
+        self.sentence_text.delete("1.0", tk.END)
+        self.sentence_text.insert(tk.END, f"{word}'s dictionary:")
+        for pos in self.word_dict.keys():
+            self.sentence_text.insert(tk.END, f"\n{pos}")
+            for (meaning_id, meaning) in self.word_dict[pos]:
+                self.sentence_text.insert(tk.END, f'\n>>{meaning}')
+                sentences = sh.fetchall(
+                    f"select `sentence` from `example_sentences` where `meaning_id` = {meaning_id};")
+                an_synonyms = sh.fetchall(
+                    f"select `word`, `is_synonym` from `an_synonyms` where `meaning_id` = {meaning_id};")
+                if an_synonyms and len(an_synonyms) > 1 or an_synonyms[0][0] != word:
+                    self.sentence_text.insert(tk.END, f'\n ')
+                    for (an_synonym, is_syn) in an_synonyms:
+                        if an_synonym != word:
+                            if is_syn:
+                                self.sentence_text.insert(tk.END, " " + an_synonym)
+                            else:  # is antonym
+                                self.sentence_text.insert(tk.END, " *" + an_synonym)
+                if sentences:
+                    for sentence in sentences:
+                        self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')  # sentence is a tuple of one item
         self.sentence_text.config(state=tk.DISABLED)
 
     def start(self):
@@ -376,13 +395,13 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
                 _id, word, phonetic, _ = vocab_tuple
                 self.prompt(f"\n{word}\t{phonetic}")
                 self.prompt_note(_id, word)
-                # todo: 给出例句和同近义词，先跳过
-                # self.prompt_example_sentences(word)
+                # 给出例句和同近义词
+                self.prompt_example_sentences_for_word(word)
             else:
                 _id, phrase, _, _ = vocab_tuple
                 self.prompt(f"\n{phrase}")
                 self.prompt_note(_id, phrase)
-                self.prompt_example_sentences(phrase)
+                self.prompt_example_sentences_for_phrase(phrase)
         elif self.state == "REMIND":
             is_word, vocab_tuple = self.get_vocab()
             _id = vocab_tuple[0]
