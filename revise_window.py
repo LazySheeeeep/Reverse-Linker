@@ -15,7 +15,7 @@ def generate_translation(word, level):
             d[pos].append(translation)
         else:
             d[pos] = [translation]
-    prompt_text = f"mastery_level:{level}"
+    prompt_text = f"mastery level:{level}"
     for key in d.keys():
         prompt_text += f"\n{key}\n  "
         prompt_text += '；'.join(d[key])
@@ -318,6 +318,14 @@ class RefreshWindow:
             self.meaning_text.insert(tk.END, '\n')
         self.meaning_text.config(state=tk.DISABLED)
 
+    def prompt_note(self, _id, vocab):
+        note = sh.fetchone(f"select `content` from `notes` where `revise_id` = {_id};")
+        if note:
+            Messagebox.show_info(message=f"{vocab}:{note}", parent=self.top, title="Note")
+
+    def prompt_example_sentences(self, vocab):
+        pass
+
     def start(self):
         self.current_index = -1
         if self.total_amount == 0:
@@ -338,20 +346,22 @@ class RefreshWindow:
     def on_confirm(self):
         if self.state == "THINKING":  # 给出答案
             self.state = "REMIND"
-            is_word0, tuple0 = self.get_vocab()
-            if is_word0:
-                _id0, word0, phonetic0, level0 = tuple0
-                self.prompt(f"\n{word0}\t{phonetic0}")
-                # todo: 给出例句和同近义词以及笔记，先跳过
+            is_word, vocab_tuple = self.get_vocab()
+            if is_word:
+                _id, word, phonetic, level = vocab_tuple
+                self.prompt(f"\n{word}\t{phonetic}")
+                self.prompt_note(_id, word)
+                # todo: 给出例句和同近义词，先跳过
             else:
-                _id0, phrase0, relate_word, level0 = tuple0
-                self.prompt(f"\n{phrase0}")
+                _id, phrase, relate_word, level = vocab_tuple
+                self.prompt(f"\n{phrase}")
+                self.prompt_note(_id, phrase)
                 # todo: 给出例句，先跳过
         elif self.state == "REMIND":
-            is_word0, tuple0 = self.get_vocab()
-            _id0 = tuple0[0]
-            vocab0 = tuple0[1]
-            self.add_correct(_id0, vocab0)
+            is_word, vocab_tuple = self.get_vocab()
+            _id = vocab_tuple[0]
+            vocab = vocab_tuple[1]
+            self.add_correct(_id, vocab)
             self.can_recall = True
             if self.can_move_on():
                 self.move_on()
