@@ -385,6 +385,10 @@ class RefreshWindow:
             self.prompt_meanings(word, level)
         else:
             _, phrase, relate_word, level = tuple1
+            self.meaning_text.config(state=tk.NORMAL)
+            self.meaning_text.delete("1.0", tk.END)
+            self.meaning_text.insert(tk.END, "phrase: no data.")
+            self.meaning_text.config(state=tk.DISABLED)
             if relate_word:
                 self.prompt_translations(phrase, level)
                 Messagebox.show_info(parent=self.top, message=relate_word)
