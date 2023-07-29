@@ -326,7 +326,21 @@ class RefreshWindow:
             Messagebox.show_info(message=f"{vocab}:{note}", parent=self.top, title="Note")
 
     def prompt_example_sentences(self, vocab):
-        pass
+        self.sentence_text.config(state=tk.NORMAL)
+        self.sentence_text.delete("1.0", tk.END)
+        self.sentence_text.insert(tk.END, f"{vocab}'s example sentences:")
+        if ' ' in vocab:  # is a phrase
+            sentences = sh.fetchall(f"select `sentence` from `example_sentences` where `phrase` = '{vocab}';")
+            if sentences:
+                for sentence in sentences:
+                    self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
+            else:
+                self.sentence_text.insert(tk.END, f"{vocab} has no example sentences:(")
+        else:
+            # fetch all the meaning_ids first:
+            meaning_ids = sh.fetchall(f"select `meaning_id` from `word_ids` where `spelling` = '{vocab}';")
+            pass
+        self.sentence_text.config(state=tk.DISABLED)
 
     def start(self):
         self.current_index = -1
@@ -350,15 +364,15 @@ class RefreshWindow:
             self.state = "REMIND"
             is_word, vocab_tuple = self.get_vocab()
             if is_word:
-                _id, word, phonetic, level = vocab_tuple
+                _id, word, phonetic, _ = vocab_tuple
                 self.prompt(f"\n{word}\t{phonetic}")
                 self.prompt_note(_id, word)
                 # todo: 给出例句和同近义词，先跳过
             else:
-                _id, phrase, relate_word, level = vocab_tuple
+                _id, phrase, _, _ = vocab_tuple
                 self.prompt(f"\n{phrase}")
                 self.prompt_note(_id, phrase)
-                # todo: 给出例句，先跳过
+                self.prompt_example_sentences(phrase)
         elif self.state == "REMIND":
             is_word, vocab_tuple = self.get_vocab()
             _id = vocab_tuple[0]
