@@ -175,6 +175,7 @@ class RespellWindow:
         self.prompt(f"\n{word}√:{cnt}")
         if cnt2 == 1:
             self.prompt(f"\n单词{word}重拼计划已完成{cnt}")
+            self.delete_count += 1
 
     def end(self):
         self.prompt(f"\n拼对{len(self.correct_list)}\t更新{self.correct_update_count}\t消除{self.delete_count}")
