@@ -213,19 +213,20 @@ class RefreshWindow:
         self.wrong_list_frame = tk.LabelFrame(text="stall", master=self.top, style=DANGER, width=200, height=900)
         self.wrong_list_frame.place(x=1130, y=10)
 
-        # 中央Frame
-        self.nb = tk.Notebook(master=self.center_frame, width=890, height=300)
+        # center frame
+        nb_w, nb_h = 890, 650
+        self.nb = tk.Notebook(master=self.center_frame, width=nb_w, height=nb_h)
         self.nb.grid(row=0, column=0, columnspan=3, padx=10, pady=30)
-        self.meaning_text = tk.Text(master=self.nb, width=890, height=300, state=tk.NORMAL)
+        self.meaning_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
         self.nb.add(self.meaning_text, text="en", sticky=tk.W)
-        self.translation_text = tk.Text(master=self.nb, width=890, height=300, state=tk.NORMAL)
+        self.translation_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
         self.nb.add(self.translation_text, text="cn", sticky=tk.W)
-        self.sentence_text = tk.Text(master=self.nb, width=890, height=300, state=tk.NORMAL)
+        self.sentence_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
         self.nb.add(self.sentence_text, text="e.g.", sticky=tk.W)
         self.nb_state = "en"
 
-        self.outcome_text = tk.Text(self.center_frame, width=60, height=15, state=tk.DISABLED)
-        self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=30)
+        self.outcome_text = tk.Text(self.center_frame, width=60, height=5, state=tk.DISABLED)
+        self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=10)
 
         tk.Button(self.center_frame, text="Recall", width=10, style="danger", command=self.recall)\
             .grid(row=2, column=0, padx=10, pady=5)
@@ -342,6 +343,9 @@ class RefreshWindow:
             # fetch all the meaning_ids first:
             meaning_ids = sh.fetchall(f"select `meaning_id` from `word_ids` where `spelling` = '{vocab}';")
             # TODO: sentences and synonyms function is to be implemented
+            query = f"select `sentence` from `example_sentences` where `meaning_id` in ("\
+                    + ", ".join(meaning_ids) + ");"
+            sentences = sh.fetchall(query)
         self.sentence_text.config(state=tk.DISABLED)
 
     def start(self):
@@ -373,7 +377,7 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
                 self.prompt(f"\n{word}\t{phonetic}")
                 self.prompt_note(_id, word)
                 # todo: 给出例句和同近义词，先跳过
-                self.prompt_example_sentences(word)
+                # self.prompt_example_sentences(word)
             else:
                 _id, phrase, _, _ = vocab_tuple
                 self.prompt(f"\n{phrase}")
