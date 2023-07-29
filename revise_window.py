@@ -252,7 +252,6 @@ class RefreshWindow:
         self.state = "IDLE"  # on_submit函数根据当前状态来决定prompt，IDLE表示什么都不做
         self.can_recall = False
         self.correct_update_count = 0
-        self.wrong_update_count = 0
         self.delete_count = 0
         self.start()
 
