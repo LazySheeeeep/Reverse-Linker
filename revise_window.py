@@ -194,7 +194,6 @@ class RespellWindow:
         self.master.deiconify()
 
 
-# todo: implement 跳过部分
 class RefreshWindow:
     def __init__(self, master, alpha):
         self.master = master
@@ -239,15 +238,9 @@ class RefreshWindow:
         self.correct_text.pack(padx=5, pady=60, side=tk.TOP)
         self.wrong_text = tk.Text(self.wrong_list_frame, width=12, height=30, state=tk.DISABLED)
         self.wrong_text.pack(padx=5, pady=60, side=tk.TOP)
-        # 一次最多100个单词
-        self.all_word_tuples = sh.fetchall("select * from `refresh_words_today` limit 100;")
-        self.all_phrase_tuples = sh.fetchall("select * from `refresh_phrases_today`;")
         self.all_vocab_tuples = []
-        for word_tuple in self.all_word_tuples:
-            self.all_vocab_tuples.append((True, word_tuple))
-        for phrase_tuple in self.all_phrase_tuples:
-            self.all_vocab_tuples.append((False, phrase_tuple))
-        self.total_amount = len(self.all_vocab_tuples)
+        self.all_words_count = lambda: int(sh.fetchone("select count(*) from `refresh_words_today`;")[0])
+        self.all_phrases_count = lambda: int(sh.fetchone("select count(*) from `refresh_phrases_today`;")[0])
         self.wrong_list = []
         self.correct_list = []
         self.current_index = -1  # 指向第几个单词
@@ -256,6 +249,15 @@ class RefreshWindow:
         self.correct_update_count = 0
         self.delete_count = 0
         self.start()
+
+    def fetch_vocab(self):
+        # 30 words and 5 phrases once at most
+        word_tuples = sh.fetchall("select * from `refresh_words_today` limit 30;")
+        phrase_tuples = sh.fetchall("select * from `refresh_phrases_today` limit 5;")
+        for word_tuple in word_tuples:
+            self.all_vocab_tuples.append((True, word_tuple))
+        for phrase_tuple in phrase_tuples:
+            self.all_vocab_tuples.append((False, phrase_tuple))
 
     def prompt(self, msg: str):
         self.outcome_text.config(state=tk.NORMAL)
@@ -335,22 +337,25 @@ class RefreshWindow:
                 for sentence in sentences:
                     self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
             else:
-                self.sentence_text.insert(tk.END, f"{vocab} has no example sentences:(")
+                self.sentence_text.insert(tk.END, f"\n{vocab} has no example sentences:(")
         else:
             # fetch all the meaning_ids first:
             meaning_ids = sh.fetchall(f"select `meaning_id` from `word_ids` where `spelling` = '{vocab}';")
-            pass
+            # TODO: sentences and synonyms function is to be implemented
         self.sentence_text.config(state=tk.DISABLED)
 
     def start(self):
         self.current_index = -1
-        if self.total_amount == 0:
-            Messagebox.show_info(message="今日计划已经完成", parent=self.top)
+        if self.all_words_count() == 0 and self.all_phrases_count() == 0:
+            Messagebox.show_info(message="Nothing more to refresh today.", parent=self.top)
             self.close_window()
             return
-        result = Messagebox.show_question(message=f"\n今日计划共：{self.total_amount}词，是否开始？", parent=self.top)
+        result = Messagebox.show_question(message=f"Today's task:\ntotal words：{self.all_words_count()}\n\
+total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 words & 5 phrases once)",
+                                          parent=self.top)
         if result == "确认":
             self.prompt("Start：")
+            self.fetch_vocab()
             if self.can_move_on():
                 self.move_on()
         else:
@@ -368,6 +373,7 @@ class RefreshWindow:
                 self.prompt(f"\n{word}\t{phonetic}")
                 self.prompt_note(_id, word)
                 # todo: 给出例句和同近义词，先跳过
+                self.prompt_example_sentences(word)
             else:
                 _id, phrase, _, _ = vocab_tuple
                 self.prompt(f"\n{phrase}")
@@ -385,20 +391,35 @@ class RefreshWindow:
             self.prompt(f"\ncurrent state {self.state} has no operation.")
 
     def on_no(self):
-        is_word0, tuple0 = self.get_vocab()
-        _id = tuple0[0]
-        vocab = tuple0[1]
-        self.add_wrong(_id, vocab)
-        if self.can_move_on():
-            self.move_on()
+        if self.state == "THINKING" or self.state == "REMIND":
+            is_word0, tuple0 = self.get_vocab()
+            _id = tuple0[0]
+            vocab = tuple0[1]
+            self.add_wrong(_id, vocab)
+            if self.can_move_on():
+                self.move_on()
+        else:
+            self.prompt(f"\ncurrent state {self.state} has no operation.")
 
     def can_move_on(self):
         self.current_index += 1
-        if self.current_index >= self.total_amount:
-            self.state = "END"
-            self.current_index = self.total_amount
-            self.end()
-            return False
+        if self.current_index >= len(self.all_vocab_tuples):
+            self.group_settlement()
+            if self.all_words_count() == 0 and self.all_phrases_count() == 0:
+                Messagebox.show_info(message="Nothing more to refresh today.", parent=self.top)
+                self.close_window()
+                return False
+            else:
+                result = Messagebox.show_question(message=f"Still have {self.all_words_count()} words\
+and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=self.top)
+                if result == "确认":
+                    self.fetch_vocab()
+                    self.current_index = 0
+                    return True
+                else:
+                    self.state = "END"
+                    self.can_recall = False
+                    return False
         else:
             return True
 
@@ -434,14 +455,16 @@ class RefreshWindow:
         else:
             self.prompt("\nnothing to recall")
 
-    def end(self):
+    def group_settlement(self):
         self.prompt(f"\n熟悉{len(self.correct_list)}\t更新{self.correct_update_count}\t消除{self.delete_count}")
         cnt = 0
         for _id, word in self.wrong_list:
             note = sh.fetchone(f"select `content` from `notes` where `revise_id` = '{_id}'")
             cnt += sh.word_renew_plan(word, 1, self.prompt, note=note, output_mode=0)
-        self.prompt(f"\n不熟{len(self.wrong_list)}\t重新加入{cnt}")
+        self.prompt(f"\n不熟{len(self.wrong_list)}\t重开{cnt}")
         self.wrong_list.clear()
+        self.correct_list.clear()
+        self.all_vocab_tuples.clear()
         sh.db.commit()
         self.prompt(f"\ncommitted")
 
