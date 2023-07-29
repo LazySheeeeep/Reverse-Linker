@@ -129,28 +129,32 @@ join `phrases` on `refresh_id` = `revise_id`
 union
 select `revise_id`, `words`.`spelling`, `mastery_level`, `next_revise_date`, 'respell'
 from `revise_items`
-join `words` on `respell_id` = `revise_id`;
+join `words` on `respell_id` = `revise_id`
+order by `next_revise_date`, `revise_id`;
 
 -- 单词重现计划总表
 drop view if exists `refresh_words_all`;
 create view `refresh_words_all` as
 select `revise_id`, `spelling`, `phonetic`, `mastery_level`, `next_revise_date`
 from `revise_items`
-join `words` on `refresh_id` = `revise_id`;
+join `words` on `refresh_id` = `revise_id`
+order by `next_revise_date`, `revise_id`;
 
 -- 词组重现计划总表
 drop view if exists `refresh_phrases_all`;
 create view `refresh_phrases_all` as
 select `revise_id`, `phrase`, `related_word`, `mastery_level`, `next_revise_date`
 from `revise_items`
-join `phrases` on `refresh_id` = `revise_id`;
+join `phrases` on `refresh_id` = `revise_id`
+order by `next_revise_date`, `revise_id`;
 
 -- 重拼计划总表
 drop view if exists `respell_words_all`;
 create view `respell_words_all` as
 select `revise_id`, `spelling`, `phonetic`, `alias`, `mastery_level`, `next_revise_date`
 from `revise_items`
-join `words` on `respell_id` = `revise_id`;
+join `words` on `respell_id` = `revise_id`
+order by `next_revise_date`, `revise_id`;
 
 
 -- 今日部分
