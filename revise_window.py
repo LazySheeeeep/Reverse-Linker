@@ -224,8 +224,8 @@ class RefreshWindow:
         self.nb.add(self.meaning_text, text="en", sticky=tk.W)
         self.translation_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
         self.nb.add(self.translation_text, text="cn", sticky=tk.W)
-        self.sentence_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
-        self.nb.add(self.sentence_text, text="e.g.", sticky=tk.W)
+        self.misc_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
+        self.nb.add(self.misc_text, text="misc", sticky=tk.W)
         self.nb_state = "en"
 
         self.outcome_text = tk.Text(self.center_frame, width=60, height=5, state=tk.DISABLED)
@@ -325,7 +325,7 @@ class RefreshWindow:
             self.meaning_text.insert(tk.END, f"\n{pos}")
             for (_, meaning) in self.word_dict[pos]:
                 self.meaning_text.insert(tk.END, '\n  ' + meaning)
-            self.sentence_text.insert(tk.END, '\n')
+            self.misc_text.insert(tk.END, '\n')
         self.meaning_text.config(state=tk.DISABLED)
 
     def prompt_note(self, _id, vocab):
@@ -334,42 +334,42 @@ class RefreshWindow:
             Messagebox.show_info(message=f"{vocab}:{note}", parent=self.top, title="Note")
 
     def prompt_example_sentences_for_phrase(self, phrase):
-        self.sentence_text.config(state=tk.NORMAL)
-        self.sentence_text.delete("1.0", tk.END)
-        self.sentence_text.insert(tk.END, f"{phrase}'s example sentences:")
+        self.misc_text.config(state=tk.NORMAL)
+        self.misc_text.delete("1.0", tk.END)
+        self.misc_text.insert(tk.END, f"{phrase}'s example sentences:")
         sentences = sh.fetchall(f"select `sentence` from `example_sentences` where `phrase` = '{phrase}';")
         if sentences:
             for sentence in sentences:
-                self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
+                self.misc_text.insert(tk.END, f'\n--{sentence[0]}')
         else:
-            self.sentence_text.insert(tk.END, f"\n{phrase} has no example sentences:(")
-        self.sentence_text.config(state=tk.DISABLED)
+            self.misc_text.insert(tk.END, f"\n{phrase} has no example sentences:(")
+        self.misc_text.config(state=tk.DISABLED)
 
     # example sentences and antonyms&synonyms prompting
     def prompt_example_sentences_for_word(self, word):
-        self.sentence_text.config(state=tk.NORMAL)
-        self.sentence_text.delete("1.0", tk.END)
-        self.sentence_text.insert(tk.END, f"{word}'s dictionary:")
+        self.misc_text.config(state=tk.NORMAL)
+        self.misc_text.delete("1.0", tk.END)
+        self.misc_text.insert(tk.END, f"{word}'s dictionary:")
         for pos in self.word_dict.keys():
-            self.sentence_text.insert(tk.END, f"\n{pos}")
+            self.misc_text.insert(tk.END, f"\n{pos}")
             for (meaning_id, meaning) in self.word_dict[pos]:
-                self.sentence_text.insert(tk.END, f'\n>>{meaning}')
+                self.misc_text.insert(tk.END, f'\n>>{meaning}')
                 sentences = sh.fetchall(
                     f"select `sentence` from `example_sentences` where `meaning_id` = {meaning_id};")
                 an_synonyms = sh.fetchall(
                     f"select `word`, `is_synonym` from `an_synonyms` where `meaning_id` = {meaning_id};")
                 if an_synonyms and len(an_synonyms) > 1 or an_synonyms[0][0] != word:
-                    self.sentence_text.insert(tk.END, f'\n ')
+                    self.misc_text.insert(tk.END, f'\n ')
                     for (an_synonym, is_syn) in an_synonyms:
                         if an_synonym != word:
                             if is_syn:
-                                self.sentence_text.insert(tk.END, " " + an_synonym)
+                                self.misc_text.insert(tk.END, " " + an_synonym)
                             else:  # is antonym
-                                self.sentence_text.insert(tk.END, " *" + an_synonym)
+                                self.misc_text.insert(tk.END, " *" + an_synonym)
                 if sentences:
                     for sentence in sentences:
-                        self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')  # sentence is a tuple of one item
-        self.sentence_text.config(state=tk.DISABLED)
+                        self.misc_text.insert(tk.END, f'\n--{sentence[0]}')  # sentence is a tuple of one item
+        self.misc_text.config(state=tk.DISABLED)
 
     def start(self):
         self.current_index = -1
@@ -505,7 +505,7 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
 
     def switch_to_misc(self):
         self.nb_state = 'misc'
-        self.nb.select(self.sentence_text)
+        self.nb.select(self.misc_text)
 
 
 if __name__ == "__main__":
