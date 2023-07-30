@@ -212,7 +212,7 @@ class RefreshWindow:
         self.top.bind("<Tab>", lambda _=None: self.on_tab())
         self.top.bind("<KeyPress-q>", lambda _=None: self.switch_to_misc())
         self.top.bind("<KeyPress-x>", lambda _=None: self.on_no())
-        self.top.bind("<KeyPress-r>", lambda _=None: self.recall())
+        self.top.bind("<KeyPress-r>", lambda _=None: self.recall_from_pass())
 
         self.correct_list_frame = tk.LabelFrame(text="pass", master=self.top, style=PRIMARY, width=200, height=900)
         self.correct_list_frame.place(x=10, y=10)
@@ -224,7 +224,7 @@ class RefreshWindow:
         # center frame
         nb_w, nb_h = 890, 650
         self.nb = tk.Notebook(master=self.center_frame, width=nb_w, height=nb_h)
-        self.nb.grid(row=0, column=0, columnspan=3, padx=10, pady=30)
+        self.nb.grid(row=0, column=0, columnspan=4, padx=10, pady=30)
         self.meaning_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
         self.nb.add(self.meaning_text, text="en", sticky=tk.W)
         self.translation_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
@@ -234,14 +234,16 @@ class RefreshWindow:
         self.nb_state = "en"
 
         self.outcome_text = tk.Text(self.center_frame, width=60, height=5, state=tk.DISABLED)
-        self.outcome_text.grid(row=1, column=0, columnspan=3, padx=10, pady=10)
+        self.outcome_text.grid(row=1, column=0, columnspan=4, padx=10, pady=10)
 
-        tk.Button(self.center_frame, text="Recall", width=10, style="danger", command=self.recall)\
+        tk.Button(self.center_frame, text="Recall→", width=10, style="danger", command=self.recall_from_pass)\
             .grid(row=2, column=0, padx=10, pady=5)
         tk.Button(self.center_frame, text="√", width=10, style=PRIMARY, command=self.on_confirm)\
             .grid(row=2, column=1, padx=10, pady=5)
         tk.Button(self.center_frame, text="×", width=10, style="danger", command=self.on_no)\
             .grid(row=2, column=2, padx=10, pady=5)
+        tk.Button(self.center_frame, text="←Recall", width=10, style="danger", command=self.recall_from_stall) \
+            .grid(row=2, column=3, padx=10, pady=5)
 
         self.correct_text = tk.Text(self.correct_list_frame, width=12, height=30, state=tk.DISABLED)
         self.correct_text.pack(padx=5, pady=60, side=tk.TOP)
@@ -255,7 +257,8 @@ class RefreshWindow:
         self.word_dict = {}
         self.current_index = -1  # 指向第几个单词
         self.state = "IDLE"  # on_submit函数根据当前状态来决定prompt，IDLE表示什么都不做
-        self.can_recall = False
+        self.can_recall_from_pass = False
+        self.can_recall_from_stall = False
         self.correct_update_count = 0
         self.delete_count = 0
         self.start()
@@ -295,6 +298,8 @@ class RefreshWindow:
             self.prompt(f"\n单词{word}更新失败")
 
     def add_wrong(self, _id, word):
+        self.can_recall_from_stall = True
+        self.prompt(f"\n{word} x")
         self.wrong_list.append((_id, word))
         self.wrong_text.config(state=tk.NORMAL)
         self.wrong_text.insert(tk.END, word + '\n')
@@ -302,6 +307,7 @@ class RefreshWindow:
         self.wrong_text.config(state=tk.DISABLED)
 
     def add_correct(self, _id, word):
+        self.can_recall_from_pass = True
         sh.commit_and_start()
         self.update_mastery_level(_id, word)
         self.correct_list.append((_id, word))
@@ -423,7 +429,6 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
             _id = vocab_tuple[0]
             vocab = vocab_tuple[1]
             self.add_correct(_id, vocab)
-            self.can_recall = True
             if self.can_move_on():
                 self.move_on()
         else:
@@ -437,7 +442,6 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
             self.add_wrong(_id, vocab)
             if self.can_move_on():
                 self.move_on()
-            self.prompt(f"{vocab} x")
         else:
             self.prompt(f"\ncurrent state {self.state} has no operation.")
 
@@ -458,7 +462,8 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
                     return True
                 else:
                     self.state = "END"
-                    self.can_recall = False
+                    self.can_recall_from_pass = False
+                    self.can_recall_from_stall = False
                     return False
         else:
             return True
@@ -484,8 +489,8 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
                 self.prompt_translations(phrase, level)
             self.switch_to_cn()
 
-    def recall(self):
-        if self.can_recall:
+    def recall_from_pass(self):
+        if self.can_recall_from_pass:
             self.correct_text.config(state=tk.NORMAL)
             self.correct_text.delete("end-2l", "end-1c")  # 删除最后一行的文本
             self.correct_text.config(state=tk.DISABLED)
@@ -493,7 +498,19 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
             self.add_wrong(_id, word)
             sh.exec_i("rollback;")
             self.prompt(f"\nrecall {word} to stall")
-            self.can_recall = False
+            self.can_recall_from_pass = False
+        else:
+            self.prompt("\nnothing to recall")
+
+    def recall_from_stall(self):
+        if self.can_recall_from_stall:
+            self.wrong_text.config(state=tk.NORMAL)
+            self.wrong_text.delete("end-2l", "end-1c")  # 删除最后一行的文本
+            self.wrong_text.config(state=tk.DISABLED)
+            _id, vocab = self.wrong_list.pop(-1)
+            self.add_correct(_id, vocab)
+            self.prompt(f"\nrecall {vocab} to pass")
+            self.can_recall_from_stall = False
         else:
             self.prompt("\nnothing to recall")
 
