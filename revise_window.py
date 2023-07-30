@@ -115,7 +115,7 @@ class RespellWindow:
     def on_submit(self, event):
         ans = self.entry.get().strip()
         self.entry.delete(0, tk.END)
-        if self.state == "THINKING":
+        if self.state == "RECALL":
             _id, word, phonetic, alias, level = self.all_tuples[self.current_index]
             if ans == '':
                 self.prompt(f"\n{phonetic}")
@@ -141,7 +141,7 @@ class RespellWindow:
             self.state = "END"
             self.end()
         else:
-            self.state = "THINKING"
+            self.state = "RECALL"
             _, new_word, _, _, level = self.all_tuples[self.current_index]
             prompt_content = generate_translation(word=new_word, level=level)
             self.prompt(f"\n\n{prompt_content}")
@@ -159,7 +159,7 @@ class RespellWindow:
             self.add_wrong(word)
 
     def recall_word(self):
-        if (self.state == "THINKING" or self.state == "MUST_SUBMIT") and self.wrong_list:
+        if (self.state == "RECALL" or self.state == "MUST_SUBMIT") and self.wrong_list:
             self.wrong_text.config(state=tk.NORMAL)
             self.wrong_text.delete("end-2l", "end-1c")  # 删除最后一行的文本
             self.wrong_text.config(state=tk.DISABLED)
@@ -392,8 +392,8 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
         return self.all_vocab_tuples[self.current_index]
 
     def on_confirm(self):
-        if self.state == "THINKING":  # 给出答案
-            self.state = "REMIND"
+        if self.state == "RECALL":  # 给出答案
+            self.state = "CHECK/STRENGTHEN"
             is_word, vocab_tuple = self.get_vocab()
             if is_word:
                 _id, word, phonetic, _ = vocab_tuple
@@ -406,7 +406,7 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
                 self.prompt(f"\n{phrase}")
                 self.prompt_note(_id, phrase)
                 self.prompt_example_sentences_for_phrase(phrase)
-        elif self.state == "REMIND":
+        elif self.state == "CHECK/STRENGTHEN":
             is_word, vocab_tuple = self.get_vocab()
             _id = vocab_tuple[0]
             vocab = vocab_tuple[1]
@@ -418,7 +418,7 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
             self.prompt(f"\ncurrent state {self.state} has no operation.")
 
     def on_no(self):
-        if self.state == "THINKING" or self.state == "REMIND":
+        if self.state == "RECALL" or self.state == "CHECK/STRENGTHEN":
             is_word0, tuple0 = self.get_vocab()
             _id = tuple0[0]
             vocab = tuple0[1]
@@ -467,7 +467,7 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
                 Messagebox.show_info(parent=self.top, message=relate_word)
             else:
                 self.prompt_translations(phrase, level)
-        self.state = "THINKING"
+        self.state = "RECALL"
 
     def recall(self):
         if self.can_recall:
