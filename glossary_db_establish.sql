@@ -226,7 +226,7 @@ begin
 		else begin
 			declare `_interval_` tinyint;
 			select `next_interval` into `_interval_` from `intervals` where `mastery_level` = new.`mastery_level`;
-			set new.`next_revise_date` = date_add(curdate(), interval `_interval_` day);
+			set new.`next_revise_date` = date_add(old.`next_revise_date`, interval `_interval_` day);
 		end;
 		end if;
 	end if;
