@@ -15,7 +15,7 @@ class MainWindow:
     def __init__(self, alpha):
         self.alpha = alpha  # 设置透明度
         self.master = tk.Window(alpha=alpha)  # 新建window作为主窗口
-        self.master.title("反向连接建立器")
+        self.master.title("Reverse Linker")
         # 对所有的子窗口，创建一个按钮，绑定对应的唤醒子窗口的功能，并且打包到主界面显示出来
         for i, (win_name, _) in enumerate(subwin):
             tk.Button(self.master, text=win_name, width=10,
