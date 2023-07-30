@@ -170,12 +170,18 @@ class RespellWindow:
     def update_mastery_level(self, word):
         cnt = sh.exec_i(f"update revise_items set mastery_level = mastery_level + 1 where revise_id in\
             (select respell_id from words where spelling = '{word}');")
-        cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
-        self.correct_update_count += cnt
-        self.prompt(f"\n{word}√:{cnt}")
-        if cnt2 == 1:
-            self.prompt(f"\n单词{word}重拼计划已完成{cnt}")
-            self.delete_count += 1
+        if cnt:
+            self.correct_update_count += 1
+            self.prompt(f"\n{word}√")
+            cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
+            if cnt2 >= 1:
+                self.prompt(f"\n单词{word}重拼计划已完成")
+                self.delete_count += 1
+                if cnt2 > 1:
+                    self.prompt(f"\n有其他{cnt2-1}个单词被删去")
+        else:
+            self.prompt(f"\n单词{word}更新失败")
+
 
     def end(self):
         self.prompt(f"\n拼对{len(self.correct_list)}\t更新{self.correct_update_count}\t消除{self.delete_count}")
@@ -277,11 +283,17 @@ class RefreshWindow:
     def update_mastery_level(self, _id, word):
         cnt = sh.exec_i(f"update revise_items set mastery_level = mastery_level + 1 where revise_id = {_id};")
         cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
-        self.correct_update_count += cnt
-        self.prompt(f"\n{word}√:{cnt}")
-        if cnt2 == 1:
-            self.prompt(f"\n{word}重现计划已完成{cnt}")
-            self.delete_count += 1
+        if cnt:
+            self.correct_update_count += 1
+            self.prompt(f"\n{word}√")
+            cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
+            if cnt2 >= 1:
+                self.prompt(f"\n单词{word}refresh计划已完成")
+                self.delete_count += 1
+                if cnt2 > 1:
+                    self.prompt(f"\n有其他{cnt2 - 1}个单词被删去")
+        else:
+            self.prompt(f"\n单词{word}更新失败")
 
     def add_wrong(self, _id, word):
         self.wrong_list.append((_id, word))
