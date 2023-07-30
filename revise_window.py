@@ -406,6 +406,7 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
                 self.prompt(f"\n{phrase}")
                 self.prompt_note(_id, phrase)
                 self.prompt_example_sentences_for_phrase(phrase)
+            self.switch_to_misc()  # show the misc window when checking
         elif self.state == "CHECK/STRENGTHEN":
             is_word, vocab_tuple = self.get_vocab()
             _id = vocab_tuple[0]
@@ -451,11 +452,13 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
             return True
 
     def move_on(self):
+        self.state = "RECALL"
         is_word, tuple1 = self.get_vocab()
         if is_word:
             _, word, _, level = tuple1
             self.prompt_translations(word, level)
             self.prompt_meanings(word, level)
+            self.switch_to_en()
         else:
             _, phrase, relate_word, level = tuple1
             self.meaning_text.config(state=tk.NORMAL)
@@ -467,7 +470,7 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
                 Messagebox.show_info(parent=self.top, message=relate_word)
             else:
                 self.prompt_translations(phrase, level)
-        self.state = "RECALL"
+            self.switch_to_cn()
 
     def recall(self):
         if self.can_recall:
@@ -497,11 +500,17 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
 
     def on_tab(self):
         if self.nb_state == "en":
-            self.nb_state = "cn"
-            self.nb.select(self.translation_text)
+            self.switch_to_cn()
         else:
-            self.nb_state = "en"
-            self.nb.select(self.meaning_text)
+            self.switch_to_en()
+
+    def switch_to_en(self):
+        self.nb_state = "en"
+        self.nb.select(self.meaning_text)
+
+    def switch_to_cn(self):
+        self.nb_state = "cn"
+        self.nb.select(self.translation_text)
 
     def switch_to_misc(self):
         self.nb_state = 'misc'
