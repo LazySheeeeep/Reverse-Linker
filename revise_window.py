@@ -331,7 +331,7 @@ class RefreshWindow:
     def prompt_note(self, _id, vocab):
         note = sh.fetchone(f"select `content` from `notes` where `revise_id` = {_id};")
         if note:
-            Messagebox.show_info(message=f"{vocab}:{note}", parent=self.top, title="Note")
+            Messagebox.show_info(message=f"{vocab}:\n\t{note[0]}", parent=self.top, title="Note")
 
     def prompt_example_sentences_for_phrase(self, phrase):
         self.misc_text.config(state=tk.NORMAL)
@@ -394,19 +394,19 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
     def on_confirm(self):
         if self.state == "RECALL":  # 给出答案
             self.state = "CHECK/STRENGTHEN"
+            self.switch_to_misc()  # show the misc window when checking
             is_word, vocab_tuple = self.get_vocab()
             if is_word:
                 _id, word, phonetic, _ = vocab_tuple
                 self.prompt(f"\n{word}\t{phonetic}")
-                self.prompt_note(_id, word)
                 # 给出例句和同近义词
                 self.prompt_example_sentences_for_word(word)
+                self.prompt_note(_id, word)
             else:
                 _id, phrase, _, _ = vocab_tuple
                 self.prompt(f"\n{phrase}")
-                self.prompt_note(_id, phrase)
                 self.prompt_example_sentences_for_phrase(phrase)
-            self.switch_to_misc()  # show the misc window when checking
+                self.prompt_note(_id, phrase)
         elif self.state == "CHECK/STRENGTHEN":
             is_word, vocab_tuple = self.get_vocab()
             _id = vocab_tuple[0]
