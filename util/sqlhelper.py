@@ -149,21 +149,20 @@ def phrase_process(phrase: str, output: Callable[[str], None], note: str = None,
 
 def word_renew_plan(word: str, op: int, output: Callable[[str], None], note: str = None, alias: str = None, output_mode=1):
     cnt = 0
-    output("\n")
     if op == 1 or op == 3:
         if note:
             cnt += exec_i(f"call `renew_refresh_plan_for_word`('{word}', '{note}');")
         else:
             cnt += exec_i(f"call `renew_refresh_plan_for_word`('{word}', null);")
         if output_mode == 1:
-            output("refresh renewed ")
+            output("\nrefresh renewed")
     if op == 2 or op == 3:
         if alias:
             cnt += exec_i(f"call `renew_respell_plan_for_word`('{word}', '{alias}');")
         else:
             cnt += exec_i(f"call `renew_respell_plan_for_word`('{word}', null);")
         if output_mode == 1:
-            output("respell renewed ")
+            output("\nrespell renewed")
     if output_mode == 1:
         output(f"\t{cnt}√")
     else:
