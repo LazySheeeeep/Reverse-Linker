@@ -340,6 +340,7 @@ class RefreshWindow:
                 self.sentence_text.insert(tk.END, f'\n--{sentence[0]}')
         else:
             self.sentence_text.insert(tk.END, f"\n{phrase} has no example sentences:(")
+        self.sentence_text.config(state=tk.DISABLED)
 
     # example sentences and antonyms&synonyms prompting
     def prompt_example_sentences_for_word(self, word):
