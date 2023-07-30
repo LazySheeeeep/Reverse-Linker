@@ -182,7 +182,6 @@ class RespellWindow:
         else:
             self.prompt(f"\n单词{word}更新失败")
 
-
     def end(self):
         self.prompt(f"\n拼对{len(self.correct_list)}\t更新{self.correct_update_count}\t消除{self.delete_count}")
         cnt = 0
@@ -438,6 +437,7 @@ total phrases:{self.all_phrases_count()}\nReady to start?\n(no more than 30 word
             self.add_wrong(_id, vocab)
             if self.can_move_on():
                 self.move_on()
+            self.prompt(f"{vocab} x")
         else:
             self.prompt(f"\ncurrent state {self.state} has no operation.")
 
