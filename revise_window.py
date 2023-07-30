@@ -203,8 +203,11 @@ class RefreshWindow:
         self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("1330x1045")
         self.top.update()
-        self.top.bind("<Return>", lambda _=None: self.on_confirm())
+        self.top.bind("<KeyPress-space>", lambda _=None: self.on_confirm())
         self.top.bind("<Tab>", lambda _=None: self.on_tab())
+        self.top.bind("<KeyPress-q>", lambda _=None: self.switch_to_misc())
+        self.top.bind("<KeyPress-x>", lambda _=None: self.on_no())
+        self.top.bind("<KeyPress-r>", lambda _=None: self.recall())
 
         self.correct_list_frame = tk.LabelFrame(text="pass", master=self.top, style=PRIMARY, width=200, height=900)
         self.correct_list_frame.place(x=10, y=10)
@@ -499,6 +502,10 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
         else:
             self.nb_state = "en"
             self.nb.select(self.meaning_text)
+
+    def switch_to_misc(self):
+        self.nb_state = 'misc'
+        self.nb.select(self.sentence_text)
 
 
 if __name__ == "__main__":
