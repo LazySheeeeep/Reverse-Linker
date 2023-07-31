@@ -192,7 +192,7 @@ class RespellWindow:
             cnt += sh.word_renew_plan(word, 2, self.prompt, alias=alias, output_mode=0)
         self.prompt(f"\n拼错{len(self.wrong_list)}\t重新加入{cnt}")
         sh.db.commit()
-        self.prompt(f"\ncommitted")
+        self.prompt("\ncommitted")
 
     def close_window(self):
         self.top.withdraw()
@@ -242,7 +242,7 @@ class RefreshWindow:
             .grid(row=2, column=1, padx=10, pady=5)
         tk.Button(self.center_frame, text="×", width=10, style="danger", command=self.on_no)\
             .grid(row=2, column=2, padx=10, pady=5)
-        tk.Button(self.center_frame, text="←Recall", width=10, style="danger", command=self.recall_from_stall) \
+        tk.Button(self.center_frame, text="←Recall", width=10, style="danger", command=self.recall_from_stall)\
             .grid(row=2, column=3, padx=10, pady=5)
 
         self.correct_text = tk.Text(self.correct_list_frame, width=12, height=30, state=tk.DISABLED)
@@ -525,7 +525,7 @@ and {self.all_phrases_count()} phrases to refresh.\nReady to move on?", parent=s
         self.correct_list.clear()
         self.all_vocab_tuples.clear()
         sh.db.commit()
-        self.prompt(f"\ncommitted")
+        self.prompt("\ncommitted")
 
     def on_tab(self):
         if self.nb_state == "en":

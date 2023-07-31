@@ -2,7 +2,6 @@ import threading
 from pymysql.err import IntegrityError
 import pymysql
 import nltk
-from nltk.corpus import wordnet as wn
 from typing import Callable
 from util import consultant as ct
 
@@ -61,7 +60,8 @@ def insert_synsets(spelling: str, synsets: [nltk.corpus.reader.wordnet.Synset],
         pos = nltk_pos_dict.get(synset.pos(), 0)
         meaning_id = synset.offset()
         insert_word_ids_command += f"""('{spelling}', {meaning_id}),"""
-        insert_meanings_command = f"""insert into `meanings`(`meaning_id`,`pos_id`,`meaning`) values ({meaning_id}, {pos}, "{synset.definition().replace('"', "'")}");"""
+        insert_meanings_command = f"""insert into `meanings`(`meaning_id`,`pos_id`,`meaning`) \
+values ({meaning_id}, {pos}, "{synset.definition().replace('"', "'")}");"""
         try:
             # 不同的单词可以有重复的意思， 所以需要单独执行
             meaning_cnt += exec_i(insert_meanings_command)
@@ -124,7 +124,7 @@ def phrase_process(phrase: str, output: Callable[[str], None], note: str = None,
     _, rigid_translations, examples = ct.rigid_bing_consult(phrase)
     output(f'√\ntranslations:{str(rigid_translations)}\n例句数：{len(examples)}')
     # 插入到数据库中
-    cnt = exec_i(f"insert into `revise_items` values();")
+    cnt = exec_i("insert into `revise_items` values();")
     output(f"\nrevise_items：{cnt}")
     revise_id = cursor.lastrowid
     if related_word is None:
@@ -147,7 +147,8 @@ def phrase_process(phrase: str, output: Callable[[str], None], note: str = None,
         output("\n无例句被插入")
 
 
-def word_renew_plan(word: str, op: int, output: Callable[[str], None], note: str = None, alias: str = None, output_mode=1):
+def word_renew_plan(word: str, op: int, output: Callable[[str], None],
+                    note: str = None, alias: str = None, output_mode=1):
     cnt = 0
     if op == 1 or op == 3:
         if note:
@@ -178,7 +179,7 @@ def word_join_plan(word: str, op: int, output: Callable[[str], None], phonetic: 
         isrt_rev_cmd = """insert into `revise_items` values (),();"""
     else:
         if next_revise_date and mastery:
-            isrt_rev_cmd = f"""insert into `revise_items`(`next_revise_date`, `mastery_level`) values 
+            isrt_rev_cmd = f"""insert into `revise_items`(`next_revise_date`, `mastery_level`) values\
             ('{next_revise_date}', '{mastery}');"""
         else:
             isrt_rev_cmd = """insert into `revise_items` values ();"""
