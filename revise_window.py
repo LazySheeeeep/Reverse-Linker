@@ -209,10 +209,12 @@ class RefreshWindow:
         self.top.geometry("1330x1045")
         self.top.update()
         self.top.bind("<KeyPress-space>", lambda _=None: self.on_confirm())
+        self.top.bind("<KeyPress-j>", lambda _=None: self.on_confirm())
         self.top.bind("<Tab>", lambda _=None: self.on_tab())
         self.top.bind("<KeyPress-q>", lambda _=None: self.switch_to_misc())
         self.top.bind("<KeyPress-x>", lambda _=None: self.on_no())
-        self.top.bind("<KeyPress-r>", lambda _=None: self.recall_from_pass())
+        self.top.bind("<Control-Right>", lambda _=None: self.recall_from_pass())
+        self.top.bind("<Control-Left>", lambda _=None: self.recall_from_stall())
 
         self.correct_list_frame = tk.LabelFrame(text="pass", master=self.top, style=PRIMARY, width=200, height=900)
         self.correct_list_frame.place(x=10, y=10)
