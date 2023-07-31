@@ -286,7 +286,6 @@ class RefreshWindow:
 
     def update_mastery_level(self, _id, word):
         cnt = sh.exec_i(f"update revise_items set mastery_level = mastery_level + 1 where revise_id = {_id};")
-        cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
         if cnt:
             self.correct_update_count += 1
             self.prompt(f"\n{word}√")
