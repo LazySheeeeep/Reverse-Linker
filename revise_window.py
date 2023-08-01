@@ -38,7 +38,6 @@ class RespellWindow:
         self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("Respell Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
-        self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("930x590")
         self.top.update()
 
@@ -100,7 +99,6 @@ class RespellWindow:
         self.correct_text.config(state=tk.DISABLED)
 
     def start(self):
-        self.current_index = -1
         if self.total_amount == 0:
             Messagebox.show_info(message="今日计划已经完成", parent=self.top)
             self.close_window()
@@ -205,7 +203,6 @@ class RefreshWindow:
         self.top = tk.Toplevel(master, alpha=alpha)
         self.top.title("Refresh Window")
         self.top.protocol("WM_DELETE_WINDOW", self.close_window)
-        self.top.protocol("WM_DEICONIFY", self.start)
         self.top.geometry("1330x1045")
         self.top.update()
         self.top.bind("<KeyPress-space>", lambda _=None: self.on_confirm())
@@ -227,11 +224,11 @@ class RefreshWindow:
         nb_w, nb_h = 890, 650
         self.nb = tk.Notebook(master=self.center_frame, width=nb_w, height=nb_h)
         self.nb.grid(row=0, column=0, columnspan=4, padx=10, pady=30)
-        self.meaning_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
+        self.meaning_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.DISABLED)
         self.nb.add(self.meaning_text, text="en", sticky=tk.W)
-        self.translation_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
+        self.translation_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.DISABLED)
         self.nb.add(self.translation_text, text="cn", sticky=tk.W)
-        self.misc_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.NORMAL)
+        self.misc_text = tk.Text(master=self.nb, width=nb_w, height=nb_h, state=tk.DISABLED)
         self.nb.add(self.misc_text, text="misc", sticky=tk.W)
         self.nb_state = "en"
 
@@ -251,6 +248,7 @@ class RefreshWindow:
         self.correct_text.pack(padx=5, pady=60, side=tk.TOP)
         self.wrong_text = tk.Text(self.wrong_list_frame, width=12, height=30, state=tk.DISABLED)
         self.wrong_text.pack(padx=5, pady=60, side=tk.TOP)
+
         self.all_vocab_tuples = []
         self.all_words_count = lambda: int(sh.fetchone("select count(*) from `refresh_words_today`;")[0])
         self.all_phrases_count = lambda: int(sh.fetchone("select count(*) from `refresh_phrases_today`;")[0])
@@ -291,7 +289,7 @@ class RefreshWindow:
             self.prompt(f"\n{word}√")
             cnt2 = sh.exec_i("delete from `revise_items` where `mastery_level` is null;")
             if cnt2 >= 1:
-                self.prompt(f"\n单词{word}refresh计划已完成")
+                self.prompt(f"\n'{word}' refresh计划已完成")
                 self.delete_count += 1
                 if cnt2 > 1:
                     self.prompt(f"\n有其他{cnt2 - 1}个单词被删去")
@@ -390,7 +388,6 @@ class RefreshWindow:
         self.misc_text.config(state=tk.DISABLED)
 
     def start(self):
-        self.current_index = -1
         if self.all_words_count() == 0 and self.all_phrases_count() == 0:
             Messagebox.show_info(message="Nothing more to refresh today.", parent=self.top)
             self.close_window()
