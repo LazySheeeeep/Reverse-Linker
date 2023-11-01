@@ -1,7 +1,7 @@
 # Reverse Linker
 
 ### Reverse Linker: Vocabulary Reverse Memorization Software
-This is a vocabulary learning software that focuses on strengthening the ability to recall English words based on their meanings, following the characteristics of the Ebbinghaus forgetting curve. It also includes a feature to review words that were previously misspelled.
+This is a vocabulary review software that focuses on strengthening the ability to recall English vocabulary(words and phrases) based on their meanings, following the characteristics of the Ebbinghaus forgetting curve. It also includes a feature to respell words that were previously misspelled.
 
 Why "reverse"? Typically, when learning vocabulary, we memorize words based on their meanings in our native language, which is a forward approach. However, this method often leads to weak understanding and difficulty recalling the specific word when confronted with the context (such as seeing the word's definition in both languages). As a result, we are unable to proficiently use these words. To address this, it is necessary to establish a reverse connection in a vocabulary learning program.
 
@@ -9,7 +9,7 @@ The software consists of two main parts:
 
 - Vocabulary Input:
     - Methods:
-        - Individual Input: Manually enter words (or phrases) from a word learning software into the input box. The system will automatically scrape dictionary web pages using a web crawler and import the words into the database.
+        - Dictation Input: Manually enter words (or phrases) from a word learning software into the input box one by one. The system will automatically scrape dictionary web pages using a web crawler and import them into the database.
             - If scraping fails, an error message will be displayed in the GUI to check if there was a spelling mistake and if the word needs to be added to the respell plan.
             - If scraping is successful, a corresponding success message will be displayed.
                 - For individual input (dictation input), check if the meaning matches the word currently being learned, and add it to the corresponding plan.
@@ -22,7 +22,7 @@ The software consists of two main parts:
         - Phrases: Can only be added to the refresh plan.
     
 - Review:
-    - Each day, the software will select the review tasks for the day based on the next_revise_date field in the database's plan list (or directly from the encapsulated view).
+    - Each day, the software will create daily review tasks based on next_revise_date field of each words in the database(or directly from the encapsulated view).
         - Refresh: Display the word's meanings (switchable between English and Chinese) and prompt the user to recall the original word. The answer can be viewed after attempting to recall.
             - If the word is considered familiar, the mastery level can be increased by 1 (the database trigger will automatically calculate the next review date).
             - If the word is considered unfamiliar, the refresh plan can be reset.
