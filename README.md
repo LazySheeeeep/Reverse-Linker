@@ -40,6 +40,7 @@
 - 在util/sqlhelper.py中换上自己数据库的连接信息
 ```shell
 # 首先确保下载了MySQL8，python解释器为3.10
+net start mysql
 mysql -u username -p database_name < glossary_db_establish.sql
 pip install ttkbootstrap
 pip install nltk
@@ -63,7 +64,7 @@ python main.py
 
 ### 作品展示
 
-- 听写
+- 听写(逐个输入)
 
 ![](./showcase/photo_2023-07-17_16-48-30.jpg)
 ![](./showcase/photo_2023-07-17_16-48-32.jpg)
@@ -75,14 +76,16 @@ python main.py
 
 - refresh
 
-![](./showcase/photo_2023-07-17_16-48-38.jpg)
-![](./showcase/photo_2023-07-17_16-48-39.jpg)
-![](./showcase/photo_2023-07-17_16-48-40.jpg)
+![](./showcase/refresh_init.png)
+![](./showcase/limber_en.png)
+![](./showcase/limber_cn.png)
+![](./showcase/limber_misc.png)
+![](./showcase/disagreeable_misc.png)
 ![](./showcase/refresh_misc_phrase.png)
 
 - respell
 
-![](./showcase/image_2023-07-17_16-47-22.png)
+![](./showcase/respell_.png)
 
 - misc
 

@@ -39,6 +39,7 @@ Since traditional vocabulary learning typically involves learning words in a for
 - Modify the database connection information in `util/sqlhelper.py`.
 ```shell
 # Make sure MySQL 8 is installed and Python interpreter is 3.10
+net start mysql
 mysql -u username -p database_name < glossary_db_establish.sql
 pip install ttkbootstrap
 pip install nltk
@@ -59,3 +60,32 @@ Replace `username` with your database username, `database_name` with the name of
   - Implementation of MiscWindow.
 - ./main.py
   - Implementation of the main window and main function.
+
+### Showcase
+
+- Dictation(one-by-one input)
+
+![](./showcase/photo_2023-07-17_16-48-30.jpg)
+![](./showcase/photo_2023-07-17_16-48-32.jpg)
+
+- File input
+
+![](./showcase/photo_2023-07-17_16-48-34.jpg)
+![](./showcase/photo_2023-07-17_16-48-35.jpg)
+
+- refresh
+
+![](./showcase/refresh_init.png)
+![](./showcase/limber_en.png)
+![](./showcase/limber_cn.png)
+![](./showcase/limber_misc.png)
+![](./showcase/disagreeable_misc.png)
+![](./showcase/refresh_misc_phrase.png)
+
+- respell
+
+![](./showcase/respell_.png)
+
+- misc
+
+![](./showcase/photo_2023-07-17_16-48-36.jpg)
