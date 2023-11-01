@@ -2,3 +2,5 @@
 __pycache__/
 .idea/
 util/__pycache__/
+test.py
+test.py.lprof
