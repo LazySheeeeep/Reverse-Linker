@@ -1,42 +1,44 @@
-# Reverse linker
-[English](README_EN.md) | [中文](README.md)
+# Reverse Linker
 
-### Vocabulary Reverse Memorization Software
-This is a vocabulary learning program that focuses on establishing reverse connections for English words based on the characteristics of the Ebbinghaus forgetting curve. It strengthens the ability to recall the original word based on the meaning of a vocabulary word. It also includes a feature to review words that were previously misspelled.
+### Reverse Linker: Vocabulary Reverse Memorization Software
+This is a vocabulary learning software that focuses on strengthening the ability to recall English words based on their meanings, following the characteristics of the Ebbinghaus forgetting curve. It also includes a feature to review words that were previously misspelled.
 
-Since traditional vocabulary learning typically involves learning words in a forward manner, i.e., memorizing the Chinese meanings based on English words, it is fast but not effective for long-term retention. It is often difficult to recall the specific English word based on the context (such as seeing the Chinese or English definitions). Therefore, in order to proficiently use the vocabulary that has been learned, it is necessary to establish reverse connections.
+Why "reverse"? Typically, when learning vocabulary, we memorize words based on their meanings in our native language, which is a forward approach. However, this method often leads to weak understanding and difficulty recalling the specific word when confronted with the context (such as seeing the word's definition in both languages). As a result, we are unable to proficiently use these words. To address this, it is necessary to establish a reverse connection in a vocabulary learning program.
+
+The software consists of two main parts:
 
 - Vocabulary Input:
     - Methods:
-        - Individual input: Users can input words (or phrases) one by one into the input box, similar to dictation. After submitting the word, the system automatically retrieves information from dictionary websites through web scraping and imports it into the database.
-            - If the web scraping fails, a GUI prompt will be displayed to check for spelling errors and the need to add it to the relearning plan.
-            - If the web scraping is successful, the corresponding prompt will be displayed.
+        - Individual Input: Manually enter words (or phrases) from a word learning software into the input box. The system will automatically scrape dictionary web pages using a web crawler and import the words into the database.
+            - If scraping fails, an error message will be displayed in the GUI to check if there was a spelling mistake and if the word needs to be added to the respell plan.
+            - If scraping is successful, a corresponding success message will be displayed.
                 - For individual input (dictation input), check if the meaning matches the word currently being learned, and add it to the corresponding plan.
-        - Batch input (from a txt file): Import a list of words from a file into the database in one go.
+        - Batch Input (txt file): Import a list of words from a file into the database in one go.
     - Types:
-        - Single words:
-            - If a word is unfamiliar and needs to be reviewed repeatedly in the future, add it to the review plan.
-            - If a word is misspelled and needs to be reviewed repeatedly in the future, add it to the relearning plan.
+        - Words:
+            - If a word is unfamiliar and needs to be reviewed repeatedly in the future, it will be added to the refresh plan.
+            - If a word is misspelled and needs to be reviewed repeatedly in the future, it will be added to the respell plan.
             - Both options can be selected simultaneously.
-        - Phrases: If a phrase is unfamiliar and needs to be reviewed repeatedly in the future, add it to the review plan.
-
+        - Phrases: Can only be added to the refresh plan.
+    
 - Review:
-    - Each day, the program will filter out today's review tasks based on the `next_revise_date` field in the database plan list (or directly from pre-defined views).
-        - Refresh: Display the corresponding Chinese and English definitions of the word (with the option to switch), and then the user tries to recall the original word before revealing the answer.
-            - If the word is recognized as familiar, increase the mastery level by 1 (the database trigger automatically calculates the next review date).
-            - If the word is not recognized as familiar, the user can reset the review plan.
-        - Respelling: Display the corresponding Chinese definition, and optionally display the phonetic symbols. The user then tries to spell the word in the input box, and the correctness is verified in the background.
-            - If the spelling is correct, increase the mastery level by 1.
-            - If the spelling is incorrect, the user can choose to reset the spelling plan.
-    - Users can also view an overview of all plans and today's plans to get an understanding of their overall progress.
+    - Each day, the software will select the review tasks for the day based on the next_revise_date field in the database's plan list (or directly from the encapsulated view).
+        - Refresh: Display the word's meanings (switchable between English and Chinese) and prompt the user to recall the original word. The answer can be viewed after attempting to recall.
+            - If the word is considered familiar, the mastery level can be increased by 1 (the database trigger will automatically calculate the next review date).
+            - If the word is considered unfamiliar, the refresh plan can be reset.
+        - Respell: Display the Chinese meaning and optionally the pronunciation guide, and prompt the user to spell the word in the input box. The correctness will be verified.
+            - If the spelling is correct, the mastery level can be increased by 1.
+            - If the spelling is incorrect, the respell plan can be reset.
+    - Users can view an overview of all plans in the database and today's plan to get an understanding of their overall progress.
+    - If a word's mastery level is originally 4 and needs to be increased by 1, reaching the set upper limit (adjustable), the refresh or respell plan for that word will be completed.
 
 ### Environment and Libraries
-- MySQL 8 is used as the database. Make sure it is set up and execute the `glossary_db_establish.sql` script.
-- Python 3.10 is used.
-- The entire application interface is built using the Python library `ttkbootstrap`, an upgraded version of `tkinter`. It needs to be downloaded using `pip install`.
-- The `nltk` library is needed for English definition lookup. It also needs to be downloaded using `pip install`.
-- Internet connection is required for Chinese definition lookup, and it must be a mainland China network in order to query Chinese definitions.
-- Modify the database connection information in `util/sqlhelper.py`.
+- MySQL 8 is used as the database. Make sure to set it up and execute the glossary_db_establish.sql script.
+- Python 3.10 interpreter is required.
+- The application interface uses the ttkbootstrap library, an upgraded version of tkinter, which needs to be downloaded via pip install.
+- The nltk library is needed for English definition queries and should be downloaded via pip install.
+- Chinese definition queries require an internet connection and **must be connected to the network in mainland China**; otherwise, Chinese definitions cannot be queried.
+- **Make sure to replace the connection information for your own database in util/sqlhelper.py**.
 ```shell
 # Make sure MySQL 8 is installed and Python interpreter is 3.10
 net start mysql
